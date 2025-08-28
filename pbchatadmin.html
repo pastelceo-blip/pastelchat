@@ -378,6 +378,10 @@
                             <label for="customerKeywords">키워드 (쉼표로 구분)</label>
                             <input type="text" id="customerKeywords" placeholder="예: 워터마크,제거,삭제,아이디" required>
                         </div>
+                        <div class="form-group">
+                            <label for="customerException">제외키워드 (쉼표로 구분)</label>
+                            <input type="text" id="customerException" placeholder="예: 무료,할인 (선택사항)">
+                        </div>
                         <button type="submit" class="btn btn-primary">추가하기</button>
                     </form>
                 </div>
@@ -405,6 +409,10 @@
                         <div class="form-group">
                             <label for="businessKeywords">키워드 (쉼표로 구분)</label>
                             <input type="text" id="businessKeywords" placeholder="예: 계좌,번호,입금" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="businessException">제외키워드 (쉼표로 구분)</label>
+                            <input type="text" id="businessException" placeholder="예: 개인정보,비밀 (선택사항)">
                         </div>
                         <button type="submit" class="btn btn-primary">추가하기</button>
                     </form>
@@ -460,6 +468,10 @@
                     <div class="form-group">
                         <label for="editKeywords">키워드 (쉼표로 구분)</label>
                         <input type="text" id="editKeywords" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editException">제외키워드 (쉼표로 구분)</label>
+                        <input type="text" id="editException" placeholder="선택사항">
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn" id="cancelBtn" style="background: #6c757d; color: white;">취소</button>
@@ -619,13 +631,14 @@
             const title = document.getElementById(`${type}Title`).value;
             const content = document.getElementById(`${type}Content`).value;
             const keywords = document.getElementById(`${type}Keywords`).value;
+            const exception = document.getElementById(`${type}Exception`).value;
 
             const newItem = {
                 id: Date.now(),
                 title,
                 content,
                 keywords,
-                exception: "",
+                exception,
                 createdAt: new Date().toISOString()
             };
 
@@ -654,6 +667,7 @@
             document.getElementById('editTitle').value = item.title;
             document.getElementById('editContent').value = item.content;
             document.getElementById('editKeywords').value = item.keywords;
+            document.getElementById('editException').value = item.exception || '';
             
             editModal.style.display = 'flex';
         }
@@ -665,6 +679,7 @@
             const title = document.getElementById('editTitle').value;
             const content = document.getElementById('editContent').value;
             const keywords = document.getElementById('editKeywords').value;
+            const exception = document.getElementById('editException').value;
 
             const data = type === 'customer' ? customerData : businessData;
             const itemIndex = data.findIndex(item => item.id == id);
@@ -676,6 +691,7 @@
                 title,
                 content,
                 keywords,
+                exception,
                 updatedAt: new Date().toISOString()
             };
 
@@ -759,6 +775,7 @@
                         <h4>${item.title}</h4>
                         <p>${item.content}</p>
                         <span class="data-keywords">키워드: ${item.keywords}</span>
+                        ${item.exception ? `<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ${item.exception}</span>` : ''}
                     </div>
                     <div class="data-actions">
                         <button class="btn btn-primary btn-sm" onclick="editItem('customer', ${item.id})">수정</button>
@@ -781,6 +798,7 @@
                         <h4>${item.title}</h4>
                         <p>${item.content}</p>
                         <span class="data-keywords">키워드: ${item.keywords}</span>
+                        ${item.exception ? `<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ${item.exception}</span>` : ''}
                     </div>
                     <div class="data-actions">
                         <button class="btn btn-primary btn-sm" onclick="editItem('business', ${item.id})">수정</button>
@@ -823,6 +841,8 @@
                         <h4>${item.title}</h4>
                         <p>${item.content}</p>
                         <span class="data-keywords">키워드: ${item.keywords}</span>
+                        ${item.exception ? `<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ${item.exception}</span>` : ''}
+                        ${item.createdAt ? `<div style="font-size: 0.8rem; color: #999; margin-top: 8px;">생성: ${new Date(item.createdAt).toLocaleString()}</div>` : ''}
                     </div>
                     <div class="data-actions">
                         <button class="btn btn-primary btn-sm" onclick="editItem('${item.type}', ${item.id})">수정</button>
@@ -851,6 +871,7 @@
             document.getElementById(`${type}Title`).value = '';
             document.getElementById(`${type}Content`).value = '';
             document.getElementById(`${type}Keywords`).value = '';
+            document.getElementById(`${type}Exception`).value = '';
         }
 
         // 전역 함수 노출
