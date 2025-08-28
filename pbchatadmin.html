@@ -657,13 +657,12 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK - Storage 제거 -->
     <script type="module">
         // Firebase 설정
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAAXr7parhL6wQuUzy4MPvVhV6-J53wzcA",
@@ -679,7 +678,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const storage = getStorage(app);
         const provider = new GoogleAuthProvider();
 
         // 전역 변수
@@ -827,15 +825,16 @@
             }
         }
 
-        // 이미지 업로드 처리
+        // 이미지를 Base64로 변환하여 Firestore에 저장하는 방식으로 변경
         async function handleImageUpload(event, type) {
             const file = event.target.files[0];
             if (!file) return;
 
             console.log('파일 선택됨:', file.name, file.size, file.type);
 
-            if (file.size > 5 * 1024 * 1024) {
-                alert('파일 크기는 5MB 이하여야 합니다.');
+            // 파일 크기 제한을 1MB로 축소 (Base64는 용량이 더 커지므로)
+            if (file.size > 1 * 1024 * 1024) {
+                alert('파일 크기는 1MB 이하여야 합니다. (무료 버전 제한)');
                 event.target.value = '';
                 return;
             }
@@ -847,127 +846,80 @@
             }
 
             const previewContainer = document.getElementById(type + 'ImagePreview');
-            previewContainer.innerHTML = '<p style="color: #8B4513;">업로드 중... </p>';
+            previewContainer.innerHTML = '<p style="color: #8B4513;">이미지 처리 중...</p>';
 
             try {
-                // 사용자 인증 상태 확인
-                if (!auth.currentUser) {
-                    throw new Error('사용자 인증이 필요합니다. 다시 로그인해주세요.');
-                }
-
-                // 파일명을 더 안전하게 생성
-                const timestamp = Date.now();
-                const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                const fileName = type + '_' + timestamp + '_' + cleanFileName;
-                
-                console.log('Storage 경로:', 'images/' + fileName);
-                
-                // Storage 참조 생성 (경로 단순화)
-                const storageRef = ref(storage, 'images/' + fileName);
-                
-                console.log('업로드 시작...');
-                
-                // 메타데이터 설정
-                const metadata = {
-                    contentType: file.type,
-                    customMetadata: {
-                        uploadedBy: auth.currentUser.email,
-                        uploadType: type
-                    }
-                };
-                
-                // 업로드 실행
-                const snapshot = await uploadBytes(storageRef, file, metadata);
-                console.log('업로드 완료:', snapshot);
-                
-                // 다운로드 URL 가져오기
-                const downloadURL = await getDownloadURL(storageRef);
-                console.log('다운로드 URL 생성:', downloadURL);
-                
-                // URL 유효성 검사
-                if (!downloadURL || downloadURL.length < 10) {
-                    throw new Error('유효하지 않은 다운로드 URL입니다.');
-                }
+                // 이미지를 Base64로 변환
+                const base64Data = await convertFileToBase64(file);
+                console.log('Base64 변환 완료, 크기:', base64Data.length);
                 
                 // 미리보기 표시
-                showImagePreview(downloadURL, type, fileName);
+                showImagePreview(base64Data, type, file.name);
                 
-                // 업로드된 이미지 정보 저장
+                // Base64 데이터 저장
                 uploadedImages.set(type + 'Image', {
-                    url: downloadURL,
-                    fileName: fileName,
-                    fullPath: snapshot.ref.fullPath
+                    url: base64Data,
+                    fileName: file.name,
+                    isBase64: true
                 });
                 
-                console.log('이미지 업로드 완료. 저장된 정보:', uploadedImages.get(type + 'Image'));
+                console.log('이미지 처리 완료');
 
             } catch (error) {
-                console.error('상세 업로드 오류:', error);
-                
-                let errorMessage = '이미지 업로드에 실패했습니다.';
-                if (error.code === 'storage/unauthorized') {
-                    errorMessage = '저장소 접근 권한이 없습니다. Firebase Storage 규칙을 확인해주세요.';
-                } else if (error.code === 'storage/quota-exceeded') {
-                    errorMessage = '저장소 용량이 초과되었습니다.';
-                } else if (error.code === 'storage/unknown') {
-                    errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
-                } else if (error.message) {
-                    errorMessage += ' (' + error.message + ')';
-                }
-                
-                alert(errorMessage);
-                previewContainer.innerHTML = '<p style="color: #dc3545;">업로드 실패: ' + error.code + '</p>';
+                console.error('이미지 처리 실패:', error);
+                alert('이미지 처리에 실패했습니다: ' + error.message);
+                previewContainer.innerHTML = '<p style="color: #dc3545;">처리 실패</p>';
                 event.target.value = '';
             }
         }
 
-        function showImagePreview(imageUrl, type, fileName) {
+        // 파일을 Base64로 변환하는 함수
+        function convertFileToBase64(file) {
+            return new Promise(function(resolve, reject) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    resolve(e.target.result);
+                };
+                reader.onerror = function(error) {
+                    reject(error);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function showImagePreview(imageData, type, fileName) {
             const previewContainer = document.getElementById(type + 'ImagePreview');
             
-            // 이미지 로드 테스트
-            const img = new Image();
-            img.onload = function() {
-                console.log('이미지 로드 성공:', imageUrl);
-                previewContainer.innerHTML = 
-                    '<div style="text-align: center;">' +
-                    '<img src="' + imageUrl + '" alt="미리보기" style="max-width: 200px; max-height: 150px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'block\';">' +
-                    '<p style="display: none; color: #dc3545;">이미지 로드 실패</p>' +
-                    '<br><button type="button" class="remove-image" onclick="removeImage(\'' + type + '\', \'' + fileName + '\')" style="display: block; margin: 10px auto 0; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">이미지 제거</button>' +
-                    '</div>';
-            };
+            // Base64 데이터인지 URL인지 확인
+            const isBase64 = imageData.indexOf('data:') === 0;
             
-            img.onerror = function() {
-                console.error('이미지 로드 실패:', imageUrl);
-                previewContainer.innerHTML = '<p style="color: #dc3545;">이미지 로드에 실패했습니다.</p>';
-            };
-            
-            img.src = imageUrl;
+            previewContainer.innerHTML = 
+                '<div style="text-align: center;">' +
+                '<img src="' + imageData + '" alt="미리보기" style="max-width: 200px; max-height: 150px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'block\';">' +
+                '<p style="display: none; color: #dc3545;">이미지 로드 실패</p>' +
+                '<br><button type="button" class="remove-image" onclick="removeImage(\'' + type + '\', \'' + fileName + '\')" style="display: block; margin: 10px auto 0; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">이미지 제거</button>' +
+                (isBase64 ? '<p style="font-size: 0.7rem; color: #666; margin-top: 5px;">💡 무료 버전: 이미지가 데이터베이스에 저장됩니다</p>' : '') +
+                '</div>';
         }
 
         async function removeImage(type, fileName) {
             if (!confirm('이미지를 삭제하시겠습니까?')) return;
 
             try {
-                if (fileName) {
-                    // 경로 수정
-                    const storageRef = ref(storage, 'images/' + fileName);
-                    await deleteObject(storageRef);
-                    console.log('Storage에서 이미지 삭제 완료:', fileName);
-                }
-
+                // Base64 방식에서는 별도 Storage 삭제 불필요
                 document.getElementById(type + 'ImagePreview').innerHTML = '';
                 document.getElementById(type + 'Image').value = '';
                 uploadedImages.delete(type + 'Image');
+                
+                console.log('이미지 제거 완료:', fileName);
 
             } catch (error) {
-                console.error('이미지 삭제 실패:', error);
+                console.error('이미지 제거 실패:', error);
                 
-                // 삭제 실패해도 UI는 정리
+                // UI는 정리
                 document.getElementById(type + 'ImagePreview').innerHTML = '';
                 document.getElementById(type + 'Image').value = '';
                 uploadedImages.delete(type + 'Image');
-                
-                alert('이미지 삭제에 실패했습니다. (UI는 정리되었습니다)');
             }
         }
 
