@@ -332,11 +332,17 @@
             measurementId: "G-LK2Q13294B"
         };
 
-        // Firebase 초기화
+        // Firebase 초기화 - 연결 최적화 설정
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
+        
+        // Firestore 연결 설정 최적화
+        db.settings = {
+            cacheSizeBytes: 40000000, // 40MB 캐시
+            experimentalForceLongPolling: false // 웹소켓 우선 사용
+        };
 
         // 인증 상태 변화 감지
         onAuthStateChanged(auth, (user) => {
@@ -410,23 +416,43 @@
                 try {
                     this.showLoading(true);
                     
-                    const customerDoc = await getDoc(doc(db, 'faqs', 'customer'));
-                    const businessDoc = await getDoc(doc(db, 'faqs', 'business'));
+                    // 연결 재시도 로직 추가
+                    const maxRetries = 3;
+                    let retryCount = 0;
                     
-                    if (customerDoc.exists() && businessDoc.exists()) {
-                        this.faqDB = customerDoc.data().items || [];
-                        this.businessDB = businessDoc.data().items || [];
-                        
-                        this.currentDB = this.faqDB;
-                        this.isDataLoaded = true;
-                        
-                        this.updateLastMessage("안녕하세요! 🤖\n파스텔무비 로봇 파봇이에요!\n편하게 일 하실 수 있도록 제가 도와드릴게요");
-                    } else {
-                        await this.createSampleData();
+                    while (retryCount < maxRetries) {
+                        try {
+                            const customerDoc = await getDoc(doc(db, 'faqs', 'customer'));
+                            const businessDoc = await getDoc(doc(db, 'faqs', 'business'));
+                            
+                            if (customerDoc.exists() && businessDoc.exists()) {
+                                this.faqDB = customerDoc.data().items || [];
+                                this.businessDB = businessDoc.data().items || [];
+                                
+                                this.currentDB = this.faqDB;
+                                this.isDataLoaded = true;
+                                
+                                this.updateLastMessage("안녕하세요! 🤖\n파스텔무비 로봇 파봇이에요!\n편하게 일 하실 수 있도록 제가 도와드릴게요");
+                                return; // 성공시 함수 종료
+                            } else {
+                                await this.createSampleData();
+                                return; // 성공시 함수 종료
+                            }
+                        } catch (error) {
+                            retryCount++;
+                            console.error(`데이터 로딩 시도 ${retryCount} 실패:`, error);
+                            
+                            if (retryCount >= maxRetries) {
+                                throw error; // 최대 재시도 초과시 에러 던지기
+                            }
+                            
+                            // 재시도 전 잠시 대기
+                            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                        }
                     }
                     
                 } catch (error) {
-                    console.error('데이터 로딩 실패:', error);
+                    console.error('데이터 로딩 최종 실패:', error);
                     this.loadFallbackData();
                 } finally {
                     this.showLoading(false);
@@ -618,6 +644,24 @@
                 window.chatbot.sendMessage();
             }
         };
+        
+        // 페이지 종료 시 정리 작업
+        window.addEventListener('beforeunload', (event) => {
+            // Firestore 연결 정리는 자동으로 처리되므로 별도 작업 불필요
+            console.log('페이지 종료 중...');
+        });
+        
+        // 네트워크 상태 감지
+        window.addEventListener('online', () => {
+            console.log('네트워크 연결됨');
+            if (window.chatbot && !window.chatbot.isDataLoaded) {
+                window.chatbot.loadData();
+            }
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('네트워크 끊김');
+        });
     </script>
 </body>
 </html>
