@@ -278,16 +278,210 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .image-preview .remove-image {
-            display: block;
-            margin: 10px auto 0;
-            padding: 5px 10px;
-            background: #dc3545;
-            color: white;
+        /* 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: none;
             border: none;
-            border-radius: 4px;
+            font-size: 1.5rem;
             cursor: pointer;
-            font-size: 0.8rem;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+            background: #f8f9fa;
+            border-radius: 50%;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .admin-container {
+                border-radius: 12px;
+                margin: 0;
+            }
+            
+            .admin-header {
+                padding: 20px;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .admin-content {
+                padding: 15px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .user-profile {
+                justify-content: center;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+                border-bottom: none;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                border-radius: 8px;
+                border: 2px solid transparent;
+                background: #f8f9fa;
+                color: #666;
+            }
+            
+            .tab-btn.active {
+                background: #8B4513;
+                color: white;
+                border-color: #8B4513;
+            }
+            
+            .form-section {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .form-section h3 {
+                font-size: 1.1rem;
+            }
+            
+            .data-item {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .data-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .modal-overlay {
+                padding: 10px;
+                align-items: flex-start;
+                padding-top: 20px;
+            }
+            
+            .modal-content {
+                max-height: 85vh;
+            }
+            
+            .modal-header,
+            .modal-body {
+                padding: 15px;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .modal-actions .btn {
+                width: 100%;
+            }
+            
+            /* 필터 버튼들 모바일에서 세로 배열 */
+            .form-section div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            
+            .form-section div[style*="display: flex"] .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .admin-header {
+                padding: 15px;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .admin-content {
+                padding: 10px;
+            }
+            
+            .form-section {
+                padding: 15px;
+            }
+            
+            .data-item {
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .btn-sm {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -420,6 +614,48 @@
             </div>
         </div>
     </div>
+    
+    <!-- 수정 모달 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>항목 수정</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editItemId">
+                    <input type="hidden" id="editItemType">
+                    <input type="hidden" id="editCurrentImage">
+                    <div class="form-group">
+                        <label>제목</label>
+                        <input type="text" id="editTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>답변 내용</label>
+                        <textarea id="editContent" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>키워드 (쉼표로 구분)</label>
+                        <input type="text" id="editKeywords" required>
+                    </div>
+                    <div class="form-group">
+                        <label>제외키워드 (쉼표로 구분)</label>
+                        <input type="text" id="editException" placeholder="선택사항">
+                    </div>
+                    <div class="form-group">
+                        <label>이미지 업로드 (선택사항)</label>
+                        <input type="file" id="editImage" accept="image/*" style="margin-bottom: 10px;">
+                        <div id="editImagePreview" class="image-preview"></div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" id="cancelBtn" style="background: #6c757d; color: white;">취소</button>
+                        <button type="submit" class="btn btn-primary">수정 완료</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -458,6 +694,9 @@
         const adminContent = document.getElementById('adminContent');
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const editModal = document.getElementById('editModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
 
         // 초기화
         function init() {
@@ -489,6 +728,19 @@
                 addItem('business');
             });
 
+            // 수정 폼 제출
+            document.getElementById('editForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateItem();
+            });
+
+            // 모달 닫기
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            editModal.addEventListener('click', function(e) {
+                if (e.target === editModal) closeModal();
+            });
+
             // 필터링 및 검색
             const filterButtons = document.querySelectorAll('[data-filter]');
             for (let i = 0; i < filterButtons.length; i++) {
@@ -505,6 +757,11 @@
             });
             document.getElementById('businessImage').addEventListener('change', function(e) {
                 handleImageUpload(e, 'business');
+            });
+            
+            // 수정 모달 이미지 업로드
+            document.getElementById('editImage').addEventListener('change', function(e) {
+                handleImageUpload(e, 'edit');
             });
         }
 
@@ -670,7 +927,105 @@
             }
         }
 
-        // 항목 삭제
+        // 항목 수정
+        function editItem(type, id) {
+            const data = type === 'customer' ? customerData : businessData;
+            let item = null;
+            
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].id == id) {
+                    item = data[i];
+                    break;
+                }
+            }
+            
+            if (!item) return;
+            
+            document.getElementById('editItemId').value = id;
+            document.getElementById('editItemType').value = type;
+            document.getElementById('editTitle').value = item.title;
+            document.getElementById('editContent').value = item.content;
+            document.getElementById('editKeywords').value = item.keywords;
+            document.getElementById('editException').value = item.exception || '';
+            document.getElementById('editCurrentImage').value = item.image || '';
+            
+            // 기존 이미지 미리보기 표시
+            const previewContainer = document.getElementById('editImagePreview');
+            if (item.image) {
+                previewContainer.innerHTML = 
+                    '<img src="' + item.image + '" alt="현재 이미지">' +
+                    '<button type="button" class="remove-image" onclick="removeCurrentImage()">현재 이미지 제거</button>';
+            } else {
+                previewContainer.innerHTML = '';
+            }
+            
+            editModal.style.display = 'flex';
+        }
+
+        // 현재 이미지 제거 (수정 모달에서)
+        function removeCurrentImage() {
+            if (!confirm('현재 이미지를 제거하시겠습니까?')) return;
+            
+            document.getElementById('editCurrentImage').value = '';
+            document.getElementById('editImagePreview').innerHTML = '';
+        }
+
+        // 항목 업데이트
+        async function updateItem() {
+            const id = parseInt(document.getElementById('editItemId').value);
+            const type = document.getElementById('editItemType').value;
+            const title = document.getElementById('editTitle').value;
+            const content = document.getElementById('editContent').value;
+            const keywords = document.getElementById('editKeywords').value;
+            const exception = document.getElementById('editException').value;
+            
+            // 이미지 URL 결정 (새로 업로드된 이미지 우선)
+            const newImageData = uploadedImages.get('editImage');
+            const currentImage = document.getElementById('editCurrentImage').value;
+            const imageUrl = newImageData ? newImageData.url : currentImage;
+
+            const data = type === 'customer' ? customerData : businessData;
+            let itemIndex = -1;
+            
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].id == id) {
+                    itemIndex = i;
+                    break;
+                }
+            }
+            
+            if (itemIndex === -1) return;
+
+            // 수동으로 객체 업데이트
+            data[itemIndex].title = title;
+            data[itemIndex].content = content;
+            data[itemIndex].keywords = keywords;
+            data[itemIndex].exception = exception;
+            data[itemIndex].image = imageUrl;
+            data[itemIndex].updatedAt = new Date().toISOString();
+
+            try {
+                await setDoc(doc(db, 'faqs', type), { items: data });
+
+                // 업로드된 이미지 정보 초기화
+                uploadedImages.delete('editImage');
+
+                closeModal();
+                showStatus('항목이 수정되었습니다.', 'success', 'customer');
+                renderData();
+            } catch (error) {
+                console.error('항목 수정 실패:', error);
+                showStatus('항목 수정에 실패했습니다.', 'error', 'customer');
+            }
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            editModal.style.display = 'none';
+            document.getElementById('editImage').value = '';
+            document.getElementById('editImagePreview').innerHTML = '';
+            uploadedImages.delete('editImage');
+        }
         async function deleteItem(type, id) {
             if (!confirm('정말 삭제하시겠습니까?')) return;
             
@@ -765,6 +1120,7 @@
                         exceptionHtml +
                     '</div>' +
                     '<div class="data-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="editItem(\'customer\', ' + item.id + ')">수정</button>' +
                         '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'customer\', ' + item.id + ')">삭제</button>' +
                     '</div>' +
                 '</div>';
@@ -794,6 +1150,7 @@
                         exceptionHtml +
                     '</div>' +
                     '<div class="data-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="editItem(\'business\', ' + item.id + ')">수정</button>' +
                         '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'business\', ' + item.id + ')">삭제</button>' +
                     '</div>' +
                 '</div>';
@@ -867,6 +1224,7 @@
                         dateHtml +
                     '</div>' +
                     '<div class="data-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="editItem(\'' + item.type + '\', ' + item.id + ')">수정</button>' +
                         '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + item.type + '\', ' + item.id + ')">삭제</button>' +
                     '</div>' +
                 '</div>';
@@ -900,8 +1258,10 @@
         }
 
         // 전역 함수 노출
+        window.editItem = editItem;
         window.deleteItem = deleteItem;
         window.removeImage = removeImage;
+        window.removeCurrentImage = removeCurrentImage;
 
         // 초기화 실행
         init();
