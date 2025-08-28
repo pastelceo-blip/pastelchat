@@ -670,7 +670,7 @@
             authDomain: "pastelmovie-cac7a.firebaseapp.com",
             databaseURL: "https://pastelmovie-cac7a-default-rtdb.firebaseio.com",
             projectId: "pastelmovie-cac7a",
-            storageBucket: "pastelmovie-cac7a.firebasestorage.app",
+            storageBucket: "pastelmovie-cac7a.appspot.com",
             messagingSenderId: "543294016464",
             appId: "1:543294016464:web:47162285ca02d3cfb587d5",
             measurementId: "G-LK2Q13294B"
@@ -816,9 +816,14 @@
                 customerData = customerDoc.exists() ? (customerDoc.data().items || []) : [];
                 businessData = businessDoc.exists() ? (businessDoc.data().items || []) : [];
                 
+                console.log('데이터 로드 완료');
+                console.log('고객지원 데이터:', customerData);
+                console.log('업무지원 데이터:', businessData);
+                
                 renderData();
             } catch (error) {
                 console.error('데이터 로딩 실패:', error);
+                alert('데이터 로딩에 실패했습니다: ' + error.message);
             }
         }
 
@@ -826,6 +831,8 @@
         async function handleImageUpload(event, type) {
             const file = event.target.files[0];
             if (!file) return;
+
+            console.log('파일 선택됨:', file.name, file.size, file.type);
 
             if (file.size > 5 * 1024 * 1024) {
                 alert('파일 크기는 5MB 이하여야 합니다.');
@@ -840,34 +847,101 @@
             }
 
             const previewContainer = document.getElementById(type + 'ImagePreview');
-            previewContainer.innerHTML = '<p>업로드 중...</p>';
+            previewContainer.innerHTML = '<p style="color: #8B4513;">업로드 중... </p>';
 
             try {
-                const fileName = type + '_' + Date.now() + '_' + file.name;
-                const storageRef = ref(storage, 'chatbot-images/' + fileName);
+                // 사용자 인증 상태 확인
+                if (!auth.currentUser) {
+                    throw new Error('사용자 인증이 필요합니다. 다시 로그인해주세요.');
+                }
+
+                // 파일명을 더 안전하게 생성
+                const timestamp = Date.now();
+                const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                const fileName = type + '_' + timestamp + '_' + cleanFileName;
                 
-                await uploadBytes(storageRef, file);
+                console.log('Storage 경로:', 'images/' + fileName);
+                
+                // Storage 참조 생성 (경로 단순화)
+                const storageRef = ref(storage, 'images/' + fileName);
+                
+                console.log('업로드 시작...');
+                
+                // 메타데이터 설정
+                const metadata = {
+                    contentType: file.type,
+                    customMetadata: {
+                        uploadedBy: auth.currentUser.email,
+                        uploadType: type
+                    }
+                };
+                
+                // 업로드 실행
+                const snapshot = await uploadBytes(storageRef, file, metadata);
+                console.log('업로드 완료:', snapshot);
+                
+                // 다운로드 URL 가져오기
                 const downloadURL = await getDownloadURL(storageRef);
+                console.log('다운로드 URL 생성:', downloadURL);
                 
+                // URL 유효성 검사
+                if (!downloadURL || downloadURL.length < 10) {
+                    throw new Error('유효하지 않은 다운로드 URL입니다.');
+                }
+                
+                // 미리보기 표시
                 showImagePreview(downloadURL, type, fileName);
+                
+                // 업로드된 이미지 정보 저장
                 uploadedImages.set(type + 'Image', {
                     url: downloadURL,
-                    fileName: fileName
+                    fileName: fileName,
+                    fullPath: snapshot.ref.fullPath
                 });
+                
+                console.log('이미지 업로드 완료. 저장된 정보:', uploadedImages.get(type + 'Image'));
 
             } catch (error) {
-                console.error('이미지 업로드 실패:', error);
-                alert('이미지 업로드에 실패했습니다.');
-                previewContainer.innerHTML = '';
+                console.error('상세 업로드 오류:', error);
+                
+                let errorMessage = '이미지 업로드에 실패했습니다.';
+                if (error.code === 'storage/unauthorized') {
+                    errorMessage = '저장소 접근 권한이 없습니다. Firebase Storage 규칙을 확인해주세요.';
+                } else if (error.code === 'storage/quota-exceeded') {
+                    errorMessage = '저장소 용량이 초과되었습니다.';
+                } else if (error.code === 'storage/unknown') {
+                    errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
+                } else if (error.message) {
+                    errorMessage += ' (' + error.message + ')';
+                }
+                
+                alert(errorMessage);
+                previewContainer.innerHTML = '<p style="color: #dc3545;">업로드 실패: ' + error.code + '</p>';
                 event.target.value = '';
             }
         }
 
         function showImagePreview(imageUrl, type, fileName) {
             const previewContainer = document.getElementById(type + 'ImagePreview');
-            previewContainer.innerHTML = 
-                '<img src="' + imageUrl + '" alt="미리보기">' +
-                '<button type="button" class="remove-image" onclick="removeImage(\'' + type + '\', \'' + fileName + '\')">이미지 제거</button>';
+            
+            // 이미지 로드 테스트
+            const img = new Image();
+            img.onload = function() {
+                console.log('이미지 로드 성공:', imageUrl);
+                previewContainer.innerHTML = 
+                    '<div style="text-align: center;">' +
+                    '<img src="' + imageUrl + '" alt="미리보기" style="max-width: 200px; max-height: 150px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'block\';">' +
+                    '<p style="display: none; color: #dc3545;">이미지 로드 실패</p>' +
+                    '<br><button type="button" class="remove-image" onclick="removeImage(\'' + type + '\', \'' + fileName + '\')" style="display: block; margin: 10px auto 0; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">이미지 제거</button>' +
+                    '</div>';
+            };
+            
+            img.onerror = function() {
+                console.error('이미지 로드 실패:', imageUrl);
+                previewContainer.innerHTML = '<p style="color: #dc3545;">이미지 로드에 실패했습니다.</p>';
+            };
+            
+            img.src = imageUrl;
         }
 
         async function removeImage(type, fileName) {
@@ -875,8 +949,10 @@
 
             try {
                 if (fileName) {
-                    const storageRef = ref(storage, 'chatbot-images/' + fileName);
+                    // 경로 수정
+                    const storageRef = ref(storage, 'images/' + fileName);
                     await deleteObject(storageRef);
+                    console.log('Storage에서 이미지 삭제 완료:', fileName);
                 }
 
                 document.getElementById(type + 'ImagePreview').innerHTML = '';
@@ -885,7 +961,13 @@
 
             } catch (error) {
                 console.error('이미지 삭제 실패:', error);
-                alert('이미지 삭제에 실패했습니다.');
+                
+                // 삭제 실패해도 UI는 정리
+                document.getElementById(type + 'ImagePreview').innerHTML = '';
+                document.getElementById(type + 'Image').value = '';
+                uploadedImages.delete(type + 'Image');
+                
+                alert('이미지 삭제에 실패했습니다. (UI는 정리되었습니다)');
             }
         }
 
@@ -1108,8 +1190,14 @@
             let html = '';
             for (let i = 0; i < customerData.length; i++) {
                 const item = customerData[i];
-                const imageHtml = item.image ? '<img src="' + item.image + '" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">' : '';
-                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ' + item.exception + '</span>' : '';
+                console.log('렌더링할 고객지원 아이템:', item);
+                
+                let imageHtml = '';
+                if (item.image && item.image.trim() !== '') {
+                    imageHtml = '<div style="margin-bottom: 10px;"><img src="' + item.image + '" alt="이미지" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; console.error(\'이미지 로드 실패:\', this.src);"></div>';
+                }
+                
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ' + item.exception + '</span>' : '';
                 
                 html += '<div class="data-item">' +
                     '<div class="data-info">' +
@@ -1138,8 +1226,14 @@
             let html = '';
             for (let i = 0; i < businessData.length; i++) {
                 const item = businessData[i];
-                const imageHtml = item.image ? '<img src="' + item.image + '" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">' : '';
-                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ' + item.exception + '</span>' : '';
+                console.log('렌더링할 업무지원 아이템:', item);
+                
+                let imageHtml = '';
+                if (item.image && item.image.trim() !== '') {
+                    imageHtml = '<div style="margin-bottom: 10px;"><img src="' + item.image + '" alt="이미지" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; console.error(\'이미지 로드 실패:\', this.src);"></div>';
+                }
+                
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ' + item.exception + '</span>' : '';
                 
                 html += '<div class="data-item">' +
                     '<div class="data-info">' +
