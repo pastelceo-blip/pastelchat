@@ -208,7 +208,7 @@
         .message-image {
             width: 100%;
             max-width: 400px;
-            aspect-ratio: 16/9;
+            height: 225px; /* 400px * 9/16 = 225px for 16:9 ratio */
             object-fit: cover;
             border-radius: 12px;
             margin: 12px 0;
@@ -220,6 +220,7 @@
             -ms-user-select: none;
             user-select: none;
             pointer-events: auto;
+            display: block;
         }
         
         .message-image:hover {
@@ -229,7 +230,9 @@
         
         .image-container {
             position: relative;
-            display: inline-block;
+            display: block;
+            width: 100%;
+            max-width: 400px;
         }
         
         .image-hint {
@@ -445,27 +448,7 @@
             }
         });
 
-        // Google 로그인
-        window.signInWithGoogle = async () => {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                const user = result.user;
-                console.log('로그인 성공:', user);
-            } catch (error) {
-                console.error('로그인 실패:', error);
-                alert('로그인에 실패했습니다. 다시 시도해주세요.');
-            }
-        };
-
-        // 로그아웃
-        window.signOut = async () => {
-            try {
-                await firebaseSignOut(auth);
-                console.log('로그아웃 완료');
-            } catch (error) {
-                console.error('로그아웃 실패:', error);
-            }
-        };
+        // Google 로그인 - 모듈 내부 함수 제거
 
         // 로그인 화면 표시
         function showLogin() {
@@ -862,6 +845,27 @@
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 window.chatbot.sendMessage();
+            }
+        };
+
+        // Google 로그인/로그아웃 전역 함수 추가
+        window.signInWithGoogle = async () => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log('로그인 성공:', user);
+            } catch (error) {
+                console.error('로그인 실패:', error);
+                alert('로그인에 실패했습니다. 다시 시도해주세요.');
+            }
+        };
+
+        window.signOut = async () => {
+            try {
+                await firebaseSignOut(auth);
+                console.log('로그아웃 완료');
+            } catch (error) {
+                console.error('로그아웃 실패:', error);
             }
         };
     </script>
