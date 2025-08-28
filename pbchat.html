@@ -204,20 +204,71 @@
             text-align: right;
         }
         
-        /* 이미지 스타일 추가 */
+        /* 이미지 스타일 */
         .message-image {
-            max-width: 100%;
-            width: auto;
-            max-height: 200px;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 16/9;
+            object-fit: cover;
             border-radius: 12px;
-            margin-top: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 12px 0;
+            box-shadow: 0 4px 16px rgba(139, 69, 19, 0.15);
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: auto;
         }
         
         .message-image:hover {
             transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.25);
+        }
+        
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .image-hint {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .image-container:hover .image-hint {
+            opacity: 1;
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #8B4513;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.3);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .copy-notification.show {
+            opacity: 1;
         }
         
         /* 이미지 모달 */
@@ -350,6 +401,11 @@
                 <button class="send-btn" id="sendBtn" onclick="sendMessage()">전송</button>
             </div>
         </div>
+    </div>
+
+    <!-- 복사 완료 알림 -->
+    <div id="copyNotification" class="copy-notification">
+        복사가 완료되었습니다
     </div>
 
     <!-- 이미지 모달 -->
@@ -572,19 +628,34 @@
                 
                 // 이미지 추가
                 if (imageUrl && imageUrl.trim() !== '') {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'image-container';
+                    imageContainer.style.marginTop = '12px';
+                    
                     const imgElement = document.createElement('img');
                     imgElement.className = 'message-image';
                     imgElement.src = imageUrl;
                     imgElement.alt = '첨부 이미지';
                     imgElement.onerror = function() {
                         this.style.display = 'none';
-                        console.error('이미지 로드 실패:', imageUrl);
+                        const errorMsg = document.createElement('div');
+                        errorMsg.textContent = '⚠️ 이미지를 불러올 수 없습니다.';
+                        errorMsg.style.color = '#999';
+                        errorMsg.style.fontSize = '0.8rem';
+                        imageContainer.appendChild(errorMsg);
                     };
                     imgElement.onclick = function() {
                         window.openImageModal(imageUrl);
                     };
+                    
+                    const hint = document.createElement('div');
+                    hint.className = 'image-hint';
+                    hint.textContent = '우클릭 복사';
+                    
+                    imageContainer.appendChild(imgElement);
+                    imageContainer.appendChild(hint);
                     messageDiv.appendChild(document.createElement('br'));
-                    messageDiv.appendChild(imgElement);
+                    messageDiv.appendChild(imageContainer);
                 }
                 
                 messagesDiv.appendChild(messageDiv);
@@ -659,6 +730,31 @@
             }
 
             processUserInput(userInput) {
+                // 숫자 입력 처리 (이전 검색 결과에서 선택)
+                const isNumber = /^[1-9]\d*$/.test(userInput.trim());
+                if (isNumber && this.lastSearchResults.length > 0) {
+                    const selectedIndex = parseInt(userInput) - 1;
+                    if (selectedIndex >= 0 && selectedIndex < this.lastSearchResults.length) {
+                        const selectedFaq = this.lastSearchResults[selectedIndex];
+                        this.lastSearchResults = [];
+                        
+                        // 복사 실행
+                        setTimeout(() => {
+                            window.copyToClipboard(selectedFaq.content);
+                        }, 100);
+                        
+                        // 이미지가 있는 경우 함께 반환
+                        if (selectedFaq.image && selectedFaq.image.trim() !== '') {
+                            return {
+                                content: selectedFaq.content,
+                                image: selectedFaq.image
+                            };
+                        }
+                        
+                        return selectedFaq.content;
+                    }
+                }
+
                 const query = userInput.toLowerCase();
                 const results = this.currentDB.filter(item => {
                     const keywords = item.keywords.toLowerCase();
@@ -667,9 +763,16 @@
                 });
 
                 if (results.length === 0) {
+                    this.lastSearchResults = [];
                     return `'${userInput}'에 대한 정보를 찾지 못했습니다.`;
                 } else if (results.length === 1) {
-                    this.copyToClipboard(results[0].content);
+                    this.lastSearchResults = [];
+                    
+                    // 복사 실행
+                    setTimeout(() => {
+                        window.copyToClipboard(results[0].content);
+                    }, 100);
+                    
                     // 이미지가 있으면 함께 반환
                     if (results[0].image && results[0].image.trim() !== '') {
                         return {
@@ -679,26 +782,30 @@
                     }
                     return results[0].content;
                 } else {
-                    let response = `${results.length}개의 결과를 찾았습니다:\n\n`;
-                    results.slice(0, 5).forEach((item, index) => {
-                        response += `${index + 1}. ${item.title}`;
+                    // 여러 결과가 있을 때는 복사하지 않음
+                    this.lastSearchResults = results.slice(0, 6);
+                    
+                    let response = `🎯 '${userInput}' 관련 정보 ${results.length}개를 찾았습니다!\n\n`;
+                    this.lastSearchResults.forEach((item, index) => {
+                        response += `${index + 1}️⃣ ${item.title}`;
                         if (item.image && item.image.trim() !== '') {
                             response += ` 📷`;
                         }
                         response += `\n`;
                     });
+                    response += "\n💡 번호를 입력하시면 자세한 내용을 확인할 수 있습니다!";
+                    
                     return response;
                 }
             }
 
-            copyToClipboard(text) {
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(text);
-                }
+            // lastSearchResults 초기화 메서드
+            clearSearchResults() {
+                this.lastSearchResults = [];
             }
         }
 
-        // 이미지 모달 함수들
+        // 이미지 모달 함수들과 복사 기능
         window.openImageModal = function(imageSrc) {
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImage');
@@ -709,6 +816,41 @@
         window.closeImageModal = function() {
             document.getElementById('imageModal').style.display = 'none';
         };
+
+        // 복사 관련 함수들
+        window.copyToClipboard = function(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyNotification();
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        };
+
+        // 폴백 복사 방법
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showCopyNotification();
+        }
+
+        // 복사 완료 알림 표시
+        function showCopyNotification() {
+            const notification = document.getElementById('copyNotification');
+            if (notification) {
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 1000);
+            }
+        }
 
         // 전역 챗봇 인스턴스 생성
         window.chatbot = new Chatbot();
