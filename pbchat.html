@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>파스텔무비 로봇</title>
     <style>
-        /* CSS는 동일하게 유지 */
         * {
             margin: 0;
             padding: 0;
@@ -21,6 +20,61 @@
             align-items: center;
         }
         
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: #FEFCF9;
+            border-radius: 20px;
+            box-shadow: 0 32px 64px rgba(101, 67, 33, 0.15);
+            padding: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .login-container h1 {
+            color: #8B4513;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .login-container p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .google-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .google-login-btn:hover {
+            background: #f8f9fa;
+            border-color: #8B4513;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
         .chatbot-container {
             width: 100%;
             max-width: 480px;
@@ -29,7 +83,7 @@
             backdrop-filter: blur(20px);
             border-radius: 0;
             box-shadow: 0 32px 64px rgba(101, 67, 33, 0.15);
-            display: flex;
+            display: none;
             flex-direction: column;
             overflow: hidden;
         }
@@ -42,6 +96,46 @@
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
         
         .chatbot-header h1 {
@@ -160,11 +254,42 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .show {
+            display: flex !important;
+        }
     </style>
 </head>
 <body>
-    <div class="chatbot-container">
+    <!-- 로그인 화면 -->
+    <div class="login-container" id="loginContainer">
+        <h1>🤖 파봇</h1>
+        <p>파스텔무비 챗봇에 오신 것을 환영합니다!</p>
+        <button class="google-login-btn" onclick="signInWithGoogle()">
+            <svg class="google-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google로 로그인
+        </button>
+    </div>
+
+    <!-- 챗봇 화면 -->
+    <div class="chatbot-container" id="chatbotContainer">
         <div class="chatbot-header">
+            <div class="user-info">
+                <div class="user-profile">
+                    <img class="user-avatar" id="userAvatar" alt="User Avatar">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <button class="logout-btn" onclick="signOut()">로그아웃</button>
+            </div>
             <h1>🤖 파봇</h1>
             <div class="tab-container">
                 <button class="tab-button active" onclick="switchTab('customer')" data-tab="customer">
@@ -192,25 +317,78 @@
 
     <!-- Firebase 9 SDK 모듈 방식 -->
     <script type="module">
-        // Firebase 설정 - 여기에 실제 값을 넣으세요
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, collection, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAAXr7parhL6wQuUzy4MPvVhV6-J53wzcA",
-  authDomain: "pastelmovie-cac7a.firebaseapp.com",
-  databaseURL: "https://pastelmovie-cac7a-default-rtdb.firebaseio.com",
-  projectId: "pastelmovie-cac7a",
-  storageBucket: "pastelmovie-cac7a.firebasestorage.app",
-  messagingSenderId: "543294016464",
-  appId: "1:543294016464:web:47162285ca02d3cfb587d5",
-  measurementId: "G-LK2Q13294B"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAXr7parhL6wQuUzy4MPvVhV6-J53wzcA",
+            authDomain: "pastelmovie-cac7a.firebaseapp.com",
+            databaseURL: "https://pastelmovie-cac7a-default-rtdb.firebaseio.com",
+            projectId: "pastelmovie-cac7a",
+            storageBucket: "pastelmovie-cac7a.firebasestorage.app",
+            messagingSenderId: "543294016464",
+            appId: "1:543294016464:web:47162285ca02d3cfb587d5",
+            measurementId: "G-LK2Q13294B"
+        };
 
         // Firebase 초기화
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // 인증 상태 변화 감지
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                showChatbot(user);
+            } else {
+                showLogin();
+            }
+        });
+
+        // Google 로그인
+        window.signInWithGoogle = async () => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log('로그인 성공:', user);
+            } catch (error) {
+                console.error('로그인 실패:', error);
+                alert('로그인에 실패했습니다. 다시 시도해주세요.');
+            }
+        };
+
+        // 로그아웃
+        window.signOut = async () => {
+            try {
+                await firebaseSignOut(auth);
+                console.log('로그아웃 완료');
+            } catch (error) {
+                console.error('로그아웃 실패:', error);
+            }
+        };
+
+        // 로그인 화면 표시
+        function showLogin() {
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('chatbotContainer').classList.remove('show');
+        }
+
+        // 챗봇 화면 표시
+        function showChatbot(user) {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('chatbotContainer').classList.add('show');
+            
+            // 사용자 정보 표시
+            document.getElementById('userName').textContent = user.displayName || user.email;
+            document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/32';
+            
+            // 챗봇 초기화 (로그인 후에만)
+            if (window.chatbot) {
+                window.chatbot.initialize();
+            }
+        }
 
         // 챗봇 클래스
         class Chatbot {
@@ -232,7 +410,6 @@ const firebaseConfig = {
                 try {
                     this.showLoading(true);
                     
-                    // Firebase에서 데이터 로드 시도
                     const customerDoc = await getDoc(doc(db, 'faqs', 'customer'));
                     const businessDoc = await getDoc(doc(db, 'faqs', 'business'));
                     
@@ -245,7 +422,6 @@ const firebaseConfig = {
                         
                         this.updateLastMessage("안녕하세요! 🤖\n파스텔무비 로봇 파봇이에요!\n편하게 일 하실 수 있도록 제가 도와드릴게요");
                     } else {
-                        // 데이터가 없으면 샘플 데이터로 초기화
                         await this.createSampleData();
                     }
                     
@@ -258,7 +434,6 @@ const firebaseConfig = {
             }
 
             async createSampleData() {
-                // 샘플 데이터 생성
                 const sampleCustomerData = {
                     items: [
                         {
@@ -403,7 +578,6 @@ const firebaseConfig = {
             }
 
             processUserInput(userInput) {
-                // 간단한 키워드 매칭
                 const query = userInput.toLowerCase();
                 const results = this.currentDB.filter(item => {
                     const keywords = item.keywords.toLowerCase();
@@ -414,7 +588,6 @@ const firebaseConfig = {
                 if (results.length === 0) {
                     return `'${userInput}'에 대한 정보를 찾지 못했습니다.`;
                 } else if (results.length === 1) {
-                    // 결과를 클립보드에 복사
                     this.copyToClipboard(results[0].content);
                     return results[0].content;
                 } else {
@@ -445,11 +618,6 @@ const firebaseConfig = {
                 window.chatbot.sendMessage();
             }
         };
-
-        // 페이지 로드 완료 시 챗봇 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            window.chatbot.initialize();
-        });
     </script>
 </body>
 </html>
