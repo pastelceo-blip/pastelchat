@@ -356,6 +356,102 @@
             color: #666;
             font-size: 0.9rem;
         }
+        
+        /* 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+            background: #f8f9fa;
+            border-radius: 50%;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        /* 검색 및 필터링 */
+        .filter-active {
+            background: #8B4513 !important;
+            color: white !important;
+        }
+        
+        .item-type-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .badge-customer {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-business {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .search-highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -412,6 +508,7 @@
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('customer')" data-tab="customer">고객지원 관리</button>
                 <button class="tab-btn" onclick="switchTab('business')" data-tab="business">업무지원 관리</button>
+                <button class="tab-btn" onclick="switchTab('list')" data-tab="list">전체 리스트</button>
             </div>
             
             <!-- 고객지원 탭 -->
@@ -478,6 +575,57 @@
                 <div class="data-list" id="businessList">
                     <!-- 업무지원 데이터가 여기에 표시됩니다 -->
                 </div>
+            </div>
+            
+            <!-- 전체 리스트 탭 -->
+            <div class="tab-content" id="listTab">
+                <div class="form-section">
+                    <h3>전체 데이터 관리</h3>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn btn-primary" onclick="adminPanel.filterList('all')">전체 보기</button>
+                        <button class="btn" onclick="adminPanel.filterList('customer')" style="background: #6c757d; color: white;">고객지원만</button>
+                        <button class="btn" onclick="adminPanel.filterList('business')" style="background: #6c757d; color: white;">업무지원만</button>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="searchInput" placeholder="제목이나 키워드로 검색..." style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;" oninput="adminPanel.searchItems()">
+                    </div>
+                </div>
+                
+                <div class="data-list" id="allItemsList">
+                    <!-- 전체 데이터가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 수정 모달 -->
+    <div class="modal-overlay" id="editModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>항목 수정</h3>
+                <button class="modal-close" onclick="adminPanel.closeEditModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editItemId">
+                    <input type="hidden" id="editItemType">
+                    <div class="form-group">
+                        <label for="editTitle">제목</label>
+                        <input type="text" id="editTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editContent">답변 내용</label>
+                        <textarea id="editContent" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editKeywords">키워드 (쉼표로 구분)</label>
+                        <input type="text" id="editKeywords" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="adminPanel.closeEditModal()" style="background: #6c757d; color: white;">취소</button>
+                        <button type="submit" class="btn btn-primary">수정 완료</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -629,6 +777,7 @@
                             <span class="data-keywords">키워드: ${item.keywords}</span>
                         </div>
                         <div class="data-actions">
+                            <button class="btn btn-primary btn-sm" onclick="adminPanel.editItem('customer', ${item.id})">수정</button>
                             <button class="btn btn-danger btn-sm" onclick="adminPanel.deleteItem('customer', ${item.id})">삭제</button>
                         </div>
                     </div>
@@ -650,6 +799,7 @@
                             <span class="data-keywords">키워드: ${item.keywords}</span>
                         </div>
                         <div class="data-actions">
+                            <button class="btn btn-primary btn-sm" onclick="adminPanel.editItem('business', ${item.id})">수정</button>
                             <button class="btn btn-danger btn-sm" onclick="adminPanel.deleteItem('business', ${item.id})">삭제</button>
                         </div>
                     </div>
