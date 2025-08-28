@@ -62,13 +62,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
-        .google-login-btn:hover {
-            background: #f8f9fa;
-            border-color: #8B4513;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        }
-        
         .admin-content {
             display: none;
             padding: 30px;
@@ -270,59 +263,31 @@
             border: 1px solid #f5c6cb;
         }
         
-        /* 모달 스타일 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        /* 이미지 미리보기 스타일 */
+        .image-preview {
+            margin-top: 10px;
+            text-align: center;
         }
         
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
+        .image-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-close {
-            background: none;
+        .image-preview .remove-image {
+            display: block;
+            margin: 10px auto 0;
+            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
             border: none;
-            font-size: 1.5rem;
+            border-radius: 4px;
             cursor: pointer;
-            color: #666;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
+            font-size: 0.8rem;
         }
     </style>
 </head>
@@ -367,20 +332,25 @@
                     <h3>새 고객지원 정보 추가</h3>
                     <form id="customerForm">
                         <div class="form-group">
-                            <label for="customerTitle">제목</label>
+                            <label>제목</label>
                             <input type="text" id="customerTitle" placeholder="예: 워터마크 제거 방법" required>
                         </div>
                         <div class="form-group">
-                            <label for="customerContent">답변 내용</label>
+                            <label>답변 내용</label>
                             <textarea id="customerContent" placeholder="고객에게 제공할 답변을 입력하세요..." required></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="customerKeywords">키워드 (쉼표로 구분)</label>
+                            <label>키워드 (쉼표로 구분)</label>
                             <input type="text" id="customerKeywords" placeholder="예: 워터마크,제거,삭제,아이디" required>
                         </div>
                         <div class="form-group">
-                            <label for="customerException">제외키워드 (쉼표로 구분)</label>
+                            <label>제외키워드 (쉼표로 구분)</label>
                             <input type="text" id="customerException" placeholder="예: 무료,할인 (선택사항)">
+                        </div>
+                        <div class="form-group">
+                            <label>이미지 업로드 (선택사항)</label>
+                            <input type="file" id="customerImage" accept="image/*" style="margin-bottom: 10px;">
+                            <div id="customerImagePreview" class="image-preview"></div>
                         </div>
                         <button type="submit" class="btn btn-primary">추가하기</button>
                     </form>
@@ -399,20 +369,25 @@
                     <h3>새 업무지원 정보 추가</h3>
                     <form id="businessForm">
                         <div class="form-group">
-                            <label for="businessTitle">제목</label>
+                            <label>제목</label>
                             <input type="text" id="businessTitle" placeholder="예: 계좌번호 정보" required>
                         </div>
                         <div class="form-group">
-                            <label for="businessContent">답변 내용</label>
+                            <label>답변 내용</label>
                             <textarea id="businessContent" placeholder="업무 관련 정보를 입력하세요..." required></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="businessKeywords">키워드 (쉼표로 구분)</label>
+                            <label>키워드 (쉼표로 구분)</label>
                             <input type="text" id="businessKeywords" placeholder="예: 계좌,번호,입금" required>
                         </div>
                         <div class="form-group">
-                            <label for="businessException">제외키워드 (쉼표로 구분)</label>
+                            <label>제외키워드 (쉼표로 구분)</label>
                             <input type="text" id="businessException" placeholder="예: 개인정보,비밀 (선택사항)">
+                        </div>
+                        <div class="form-group">
+                            <label>이미지 업로드 (선택사항)</label>
+                            <input type="file" id="businessImage" accept="image/*" style="margin-bottom: 10px;">
+                            <div id="businessImagePreview" class="image-preview"></div>
                         </div>
                         <button type="submit" class="btn btn-primary">추가하기</button>
                     </form>
@@ -445,48 +420,14 @@
             </div>
         </div>
     </div>
-    
-    <!-- 수정 모달 -->
-    <div class="modal-overlay" id="editModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>항목 수정</h3>
-                <button class="modal-close" id="closeModal">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="editForm">
-                    <input type="hidden" id="editItemId">
-                    <input type="hidden" id="editItemType">
-                    <div class="form-group">
-                        <label for="editTitle">제목</label>
-                        <input type="text" id="editTitle" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editContent">답변 내용</label>
-                        <textarea id="editContent" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="editKeywords">키워드 (쉼표로 구분)</label>
-                        <input type="text" id="editKeywords" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editException">제외키워드 (쉼표로 구분)</label>
-                        <input type="text" id="editException" placeholder="선택사항">
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn" id="cancelBtn" style="background: #6c757d; color: white;">취소</button>
-                        <button type="submit" class="btn btn-primary">수정 완료</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Firebase SDK -->
     <script type="module">
+        // Firebase 설정
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAAXr7parhL6wQuUzy4MPvVhV6-J53wzcA",
@@ -502,22 +443,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
         const provider = new GoogleAuthProvider();
 
-        // 데이터 저장소
+        // 전역 변수
         let customerData = [];
         let businessData = [];
         let currentFilter = 'all';
         let searchTerm = '';
+        let uploadedImages = new Map();
 
-        // DOM 요소들
+        // DOM 요소
         const loginSection = document.getElementById('loginSection');
         const adminContent = document.getElementById('adminContent');
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
-        const closeModalBtn = document.getElementById('closeModal');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const editModal = document.getElementById('editModal');
 
         // 초기화
         function init() {
@@ -527,47 +467,48 @@
 
         // 이벤트 리스너 설정
         function setupEventListeners() {
-            // 로그인/로그아웃
             loginBtn.addEventListener('click', signInWithGoogle);
             logoutBtn.addEventListener('click', signOutUser);
 
             // 탭 전환
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
-            });
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
+                });
+            }
 
             // 폼 제출
-            document.getElementById('customerForm').addEventListener('submit', (e) => {
+            document.getElementById('customerForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 addItem('customer');
             });
 
-            document.getElementById('businessForm').addEventListener('submit', (e) => {
+            document.getElementById('businessForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 addItem('business');
             });
 
-            document.getElementById('editForm').addEventListener('submit', (e) => {
-                e.preventDefault();
-                updateItem();
-            });
-
-            // 모달 닫기
-            closeModalBtn.addEventListener('click', closeModal);
-            cancelBtn.addEventListener('click', closeModal);
-            editModal.addEventListener('click', (e) => {
-                if (e.target === editModal) closeModal();
-            });
-
             // 필터링 및 검색
-            document.querySelectorAll('[data-filter]').forEach(btn => {
-                btn.addEventListener('click', (e) => filterList(e.target.dataset.filter));
-            });
+            const filterButtons = document.querySelectorAll('[data-filter]');
+            for (let i = 0; i < filterButtons.length; i++) {
+                filterButtons[i].addEventListener('click', function() {
+                    filterList(this.dataset.filter);
+                });
+            }
 
             document.getElementById('searchInput').addEventListener('input', searchItems);
+
+            // 이미지 업로드
+            document.getElementById('customerImage').addEventListener('change', function(e) {
+                handleImageUpload(e, 'customer');
+            });
+            document.getElementById('businessImage').addEventListener('change', function(e) {
+                handleImageUpload(e, 'business');
+            });
         }
 
-        // 로그인
+        // 로그인 함수
         async function signInWithGoogle() {
             try {
                 await signInWithPopup(auth, provider);
@@ -577,7 +518,6 @@
             }
         }
 
-        // 로그아웃
         async function signOutUser() {
             try {
                 await signOut(auth);
@@ -586,7 +526,6 @@
             }
         }
 
-        // 인증 상태 변화
         function handleAuthChange(user) {
             if (user) {
                 showAdminPanel(user);
@@ -626,105 +565,151 @@
             }
         }
 
+        // 이미지 업로드 처리
+        async function handleImageUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('파일 크기는 5MB 이하여야 합니다.');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.type.indexOf('image/') !== 0) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                event.target.value = '';
+                return;
+            }
+
+            const previewContainer = document.getElementById(type + 'ImagePreview');
+            previewContainer.innerHTML = '<p>업로드 중...</p>';
+
+            try {
+                const fileName = type + '_' + Date.now() + '_' + file.name;
+                const storageRef = ref(storage, 'chatbot-images/' + fileName);
+                
+                await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(storageRef);
+                
+                showImagePreview(downloadURL, type, fileName);
+                uploadedImages.set(type + 'Image', {
+                    url: downloadURL,
+                    fileName: fileName
+                });
+
+            } catch (error) {
+                console.error('이미지 업로드 실패:', error);
+                alert('이미지 업로드에 실패했습니다.');
+                previewContainer.innerHTML = '';
+                event.target.value = '';
+            }
+        }
+
+        function showImagePreview(imageUrl, type, fileName) {
+            const previewContainer = document.getElementById(type + 'ImagePreview');
+            previewContainer.innerHTML = 
+                '<img src="' + imageUrl + '" alt="미리보기">' +
+                '<button type="button" class="remove-image" onclick="removeImage(\'' + type + '\', \'' + fileName + '\')">이미지 제거</button>';
+        }
+
+        async function removeImage(type, fileName) {
+            if (!confirm('이미지를 삭제하시겠습니까?')) return;
+
+            try {
+                if (fileName) {
+                    const storageRef = ref(storage, 'chatbot-images/' + fileName);
+                    await deleteObject(storageRef);
+                }
+
+                document.getElementById(type + 'ImagePreview').innerHTML = '';
+                document.getElementById(type + 'Image').value = '';
+                uploadedImages.delete(type + 'Image');
+
+            } catch (error) {
+                console.error('이미지 삭제 실패:', error);
+                alert('이미지 삭제에 실패했습니다.');
+            }
+        }
+
         // 항목 추가
         async function addItem(type) {
-            const title = document.getElementById(`${type}Title`).value;
-            const content = document.getElementById(`${type}Content`).value;
-            const keywords = document.getElementById(`${type}Keywords`).value;
-            const exception = document.getElementById(`${type}Exception`).value;
+            const title = document.getElementById(type + 'Title').value;
+            const content = document.getElementById(type + 'Content').value;
+            const keywords = document.getElementById(type + 'Keywords').value;
+            const exception = document.getElementById(type + 'Exception').value;
+            
+            const imageData = uploadedImages.get(type + 'Image');
+            const imageUrl = imageData ? imageData.url : '';
 
             const newItem = {
                 id: Date.now(),
-                title,
-                content,
-                keywords,
-                exception,
+                title: title,
+                content: content,
+                keywords: keywords,
+                exception: exception,
+                image: imageUrl,
                 createdAt: new Date().toISOString()
             };
 
-            if (type === 'customer') {
-                customerData.push(newItem);
-                await setDoc(doc(db, 'faqs', 'customer'), { items: customerData });
-            } else {
-                businessData.push(newItem);
-                await setDoc(doc(db, 'faqs', 'business'), { items: businessData });
+            try {
+                if (type === 'customer') {
+                    customerData.push(newItem);
+                    await setDoc(doc(db, 'faqs', 'customer'), { items: customerData });
+                } else {
+                    businessData.push(newItem);
+                    await setDoc(doc(db, 'faqs', 'business'), { items: businessData });
+                }
+
+                showStatus((type === 'customer' ? '고객지원' : '업무지원') + ' 항목이 추가되었습니다.', 'success', type);
+                clearForm(type);
+                renderData();
+            } catch (error) {
+                console.error('항목 추가 실패:', error);
+                showStatus('항목 추가에 실패했습니다.', 'error', type);
             }
-
-            showStatus(`${type === 'customer' ? '고객지원' : '업무지원'} 항목이 추가되었습니다.`, 'success', type);
-            clearForm(type);
-            renderData();
-        }
-
-        // 항목 수정
-        function editItem(type, id) {
-            const data = type === 'customer' ? customerData : businessData;
-            const item = data.find(item => item.id == id);
-            
-            if (!item) return;
-            
-            document.getElementById('editItemId').value = id;
-            document.getElementById('editItemType').value = type;
-            document.getElementById('editTitle').value = item.title;
-            document.getElementById('editContent').value = item.content;
-            document.getElementById('editKeywords').value = item.keywords;
-            document.getElementById('editException').value = item.exception || '';
-            
-            editModal.style.display = 'flex';
-        }
-
-        // 항목 업데이트
-        async function updateItem() {
-            const id = parseInt(document.getElementById('editItemId').value);
-            const type = document.getElementById('editItemType').value;
-            const title = document.getElementById('editTitle').value;
-            const content = document.getElementById('editContent').value;
-            const keywords = document.getElementById('editKeywords').value;
-            const exception = document.getElementById('editException').value;
-
-            const data = type === 'customer' ? customerData : businessData;
-            const itemIndex = data.findIndex(item => item.id == id);
-            
-            if (itemIndex === -1) return;
-
-            data[itemIndex] = {
-                ...data[itemIndex],
-                title,
-                content,
-                keywords,
-                exception,
-                updatedAt: new Date().toISOString()
-            };
-
-            await setDoc(doc(db, 'faqs', type), { items: data });
-
-            closeModal();
-            showStatus('항목이 수정되었습니다.', 'success', 'customer');
-            renderData();
         }
 
         // 항목 삭제
         async function deleteItem(type, id) {
             if (!confirm('정말 삭제하시겠습니까?')) return;
             
-            if (type === 'customer') {
-                customerData = customerData.filter(item => item.id != id);
-                await setDoc(doc(db, 'faqs', 'customer'), { items: customerData });
-            } else {
-                businessData = businessData.filter(item => item.id != id);
-                await setDoc(doc(db, 'faqs', 'business'), { items: businessData });
-            }
+            try {
+                if (type === 'customer') {
+                    customerData = customerData.filter(function(item) {
+                        return item.id != id;
+                    });
+                    await setDoc(doc(db, 'faqs', 'customer'), { items: customerData });
+                } else {
+                    businessData = businessData.filter(function(item) {
+                        return item.id != id;
+                    });
+                    await setDoc(doc(db, 'faqs', 'business'), { items: businessData });
+                }
 
-            showStatus('항목이 삭제되었습니다.', 'success', 'customer');
-            renderData();
+                showStatus('항목이 삭제되었습니다.', 'success', 'customer');
+                renderData();
+                
+            } catch (error) {
+                console.error('항목 삭제 실패:', error);
+                alert('삭제에 실패했습니다.');
+            }
         }
 
         // 탭 전환
         function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
             
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            document.getElementById(`${tab}Tab`).classList.add('active');
+            const tabContents = document.querySelectorAll('.tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
             
             if (tab === 'list') {
                 renderAllItems();
@@ -735,12 +720,13 @@
         function filterList(filter) {
             currentFilter = filter;
             
-            document.querySelectorAll('[data-filter]').forEach(btn => {
-                btn.style.background = '#6c757d';
-                btn.style.color = 'white';
-            });
+            const filterButtons = document.querySelectorAll('[data-filter]');
+            for (let i = 0; i < filterButtons.length; i++) {
+                filterButtons[i].style.background = '#6c757d';
+                filterButtons[i].style.color = 'white';
+            }
             
-            document.querySelector(`[data-filter="${filter}"]`).style.background = '#8B4513';
+            document.querySelector('[data-filter="' + filter + '"]').style.background = '#8B4513';
             renderAllItems();
         }
 
@@ -748,11 +734,6 @@
         function searchItems() {
             searchTerm = document.getElementById('searchInput').value.toLowerCase();
             renderAllItems();
-        }
-
-        // 모달 닫기
-        function closeModal() {
-            editModal.style.display = 'none';
         }
 
         // 데이터 렌더링
@@ -769,20 +750,26 @@
                 return;
             }
 
-            container.innerHTML = customerData.map(item => `
-                <div class="data-item">
-                    <div class="data-info">
-                        <h4>${item.title}</h4>
-                        <p>${item.content}</p>
-                        <span class="data-keywords">키워드: ${item.keywords}</span>
-                        ${item.exception ? `<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ${item.exception}</span>` : ''}
-                    </div>
-                    <div class="data-actions">
-                        <button class="btn btn-primary btn-sm" onclick="editItem('customer', ${item.id})">수정</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('customer', ${item.id})">삭제</button>
-                    </div>
-                </div>
-            `).join('');
+            let html = '';
+            for (let i = 0; i < customerData.length; i++) {
+                const item = customerData[i];
+                const imageHtml = item.image ? '<img src="' + item.image + '" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">' : '';
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ' + item.exception + '</span>' : '';
+                
+                html += '<div class="data-item">' +
+                    '<div class="data-info">' +
+                        imageHtml +
+                        '<h4>' + item.title + '</h4>' +
+                        '<p>' + item.content + '</p>' +
+                        '<span class="data-keywords">키워드: ' + item.keywords + '</span>' +
+                        exceptionHtml +
+                    '</div>' +
+                    '<div class="data-actions">' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'customer\', ' + item.id + ')">삭제</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
         }
 
         function renderBusinessData() {
@@ -792,39 +779,67 @@
                 return;
             }
 
-            container.innerHTML = businessData.map(item => `
-                <div class="data-item">
-                    <div class="data-info">
-                        <h4>${item.title}</h4>
-                        <p>${item.content}</p>
-                        <span class="data-keywords">키워드: ${item.keywords}</span>
-                        ${item.exception ? `<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ${item.exception}</span>` : ''}
-                    </div>
-                    <div class="data-actions">
-                        <button class="btn btn-primary btn-sm" onclick="editItem('business', ${item.id})">수정</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('business', ${item.id})">삭제</button>
-                    </div>
-                </div>
-            `).join('');
+            let html = '';
+            for (let i = 0; i < businessData.length; i++) {
+                const item = businessData[i];
+                const imageHtml = item.image ? '<img src="' + item.image + '" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">' : '';
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">제외키워드: ' + item.exception + '</span>' : '';
+                
+                html += '<div class="data-item">' +
+                    '<div class="data-info">' +
+                        imageHtml +
+                        '<h4>' + item.title + '</h4>' +
+                        '<p>' + item.content + '</p>' +
+                        '<span class="data-keywords">키워드: ' + item.keywords + '</span>' +
+                        exceptionHtml +
+                    '</div>' +
+                    '<div class="data-actions">' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'business\', ' + item.id + ')">삭제</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
         }
 
         function renderAllItems() {
             const container = document.getElementById('allItemsList');
             let allItems = [];
 
+            // 데이터 수집
             if (currentFilter === 'all' || currentFilter === 'customer') {
-                allItems.push(...customerData.map(item => ({...item, type: 'customer'})));
+                for (let i = 0; i < customerData.length; i++) {
+                    const item = {};
+                    for (let key in customerData[i]) {
+                        item[key] = customerData[i][key];
+                    }
+                    item.type = 'customer';
+                    allItems.push(item);
+                }
             }
+            
             if (currentFilter === 'all' || currentFilter === 'business') {
-                allItems.push(...businessData.map(item => ({...item, type: 'business'})));
+                for (let i = 0; i < businessData.length; i++) {
+                    const item = {};
+                    for (let key in businessData[i]) {
+                        item[key] = businessData[i][key];
+                    }
+                    item.type = 'business';
+                    allItems.push(item);
+                }
             }
 
+            // 검색 필터링
             if (searchTerm) {
-                allItems = allItems.filter(item => 
-                    item.title.toLowerCase().includes(searchTerm) || 
-                    item.keywords.toLowerCase().includes(searchTerm) ||
-                    item.content.toLowerCase().includes(searchTerm)
-                );
+                const filteredItems = [];
+                for (let i = 0; i < allItems.length; i++) {
+                    const item = allItems[i];
+                    if (item.title.toLowerCase().indexOf(searchTerm) !== -1 || 
+                        item.keywords.toLowerCase().indexOf(searchTerm) !== -1 ||
+                        item.content.toLowerCase().indexOf(searchTerm) !== -1) {
+                        filteredItems.push(item);
+                    }
+                }
+                allItems = filteredItems;
             }
 
             if (allItems.length === 0) {
@@ -832,35 +847,42 @@
                 return;
             }
 
-            container.innerHTML = allItems.map(item => `
-                <div class="data-item">
-                    <div class="data-info">
-                        <span style="background: ${item.type === 'customer' ? '#e3f2fd' : '#f3e5f5'}; color: ${item.type === 'customer' ? '#1976d2' : '#7b1fa2'}; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-bottom: 8px; display: inline-block;">
-                            ${item.type === 'customer' ? '고객지원' : '업무지원'}
-                        </span>
-                        <h4>${item.title}</h4>
-                        <p>${item.content}</p>
-                        <span class="data-keywords">키워드: ${item.keywords}</span>
-                        ${item.exception ? `<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ${item.exception}</span>` : ''}
-                        ${item.createdAt ? `<div style="font-size: 0.8rem; color: #999; margin-top: 8px;">생성: ${new Date(item.createdAt).toLocaleString()}</div>` : ''}
-                    </div>
-                    <div class="data-actions">
-                        <button class="btn btn-primary btn-sm" onclick="editItem('${item.type}', ${item.id})">수정</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem('${item.type}', ${item.id})">삭제</button>
-                    </div>
-                </div>
-            `).join('');
+            let html = '';
+            for (let i = 0; i < allItems.length; i++) {
+                const item = allItems[i];
+                const imageHtml = item.image ? '<br><img src="' + item.image + '" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; margin: 10px 0;">' : '';
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ' + item.exception + '</span>' : '';
+                const dateHtml = item.createdAt ? '<div style="font-size: 0.8rem; color: #999; margin-top: 8px;">생성: ' + new Date(item.createdAt).toLocaleString() + '</div>' : '';
+                
+                html += '<div class="data-item">' +
+                    '<div class="data-info">' +
+                        '<span style="background: ' + (item.type === 'customer' ? '#e3f2fd' : '#f3e5f5') + '; color: ' + (item.type === 'customer' ? '#1976d2' : '#7b1fa2') + '; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-bottom: 8px; display: inline-block;">' +
+                            (item.type === 'customer' ? '고객지원' : '업무지원') +
+                        '</span>' +
+                        imageHtml +
+                        '<h4>' + item.title + '</h4>' +
+                        '<p>' + item.content + '</p>' +
+                        '<span class="data-keywords">키워드: ' + item.keywords + '</span>' +
+                        exceptionHtml +
+                        dateHtml +
+                    '</div>' +
+                    '<div class="data-actions">' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + item.type + '\', ' + item.id + ')">삭제</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
         }
 
         // 상태 메시지
         function showStatus(message, type, tab) {
-            const statusEl = document.getElementById(`${tab}Status`);
+            const statusEl = document.getElementById(tab + 'Status');
             if (statusEl) {
-                statusEl.className = `status-message status-${type}`;
+                statusEl.className = 'status-message status-' + type;
                 statusEl.textContent = message;
                 statusEl.style.display = 'block';
                 
-                setTimeout(() => {
+                setTimeout(function() {
                     statusEl.style.display = 'none';
                 }, 3000);
             }
@@ -868,15 +890,18 @@
 
         // 폼 초기화
         function clearForm(type) {
-            document.getElementById(`${type}Title`).value = '';
-            document.getElementById(`${type}Content`).value = '';
-            document.getElementById(`${type}Keywords`).value = '';
-            document.getElementById(`${type}Exception`).value = '';
+            document.getElementById(type + 'Title').value = '';
+            document.getElementById(type + 'Content').value = '';
+            document.getElementById(type + 'Keywords').value = '';
+            document.getElementById(type + 'Exception').value = '';
+            document.getElementById(type + 'Image').value = '';
+            document.getElementById(type + 'ImagePreview').innerHTML = '';
+            uploadedImages.delete(type + 'Image');
         }
 
         // 전역 함수 노출
-        window.editItem = editItem;
         window.deleteItem = deleteItem;
+        window.removeImage = removeImage;
 
         // 초기화 실행
         init();
