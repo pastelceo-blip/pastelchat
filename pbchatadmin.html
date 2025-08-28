@@ -777,8 +777,8 @@
                             <span class="data-keywords">키워드: ${item.keywords}</span>
                         </div>
                         <div class="data-actions">
-                            <button class="btn btn-primary btn-sm" onclick="window.adminPanel.editItem('customer', ${item.id})">수정</button>
-                            <button class="btn btn-danger btn-sm" onclick="window.adminPanel.deleteItem('customer', ${item.id})">삭제</button>
+                            <button class="btn btn-primary btn-sm" onclick="window.adminPanel.editItem('customer', ${item.id}); return false;">수정</button>
+                            <button class="btn btn-danger btn-sm" onclick="window.adminPanel.deleteItem('customer', ${item.id}); return false;">삭제</button>
                         </div>
                     </div>
                 `).join('');
@@ -799,8 +799,8 @@
                             <span class="data-keywords">키워드: ${item.keywords}</span>
                         </div>
                         <div class="data-actions">
-                            <button class="btn btn-primary btn-sm" onclick="window.adminPanel.editItem('business', ${item.id})">수정</button>
-                            <button class="btn btn-danger btn-sm" onclick="window.adminPanel.deleteItem('business', ${item.id})">삭제</button>
+                            <button class="btn btn-primary btn-sm" onclick="window.adminPanel.editItem('business', ${item.id}); return false;">수정</button>
+                            <button class="btn btn-danger btn-sm" onclick="window.adminPanel.deleteItem('business', ${item.id}); return false;">삭제</button>
                         </div>
                     </div>
                 `).join('');
@@ -888,19 +888,31 @@
 
         // 탭 전환
         window.switchTab = (tab) => {
-            if (!window.adminPanel) return;
+            console.log('탭 전환:', tab); // 디버깅용
+            if (!window.adminPanel) {
+                console.error('adminPanel이 없습니다');
+                return;
+            }
             
             window.adminPanel.currentTab = tab;
             
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            document.getElementById(`${tab}Tab`).classList.add('active');
+            const tabBtn = document.querySelector(`[data-tab="${tab}"]`);
+            const tabContent = document.getElementById(`${tab}Tab`);
+            
+            console.log('탭 버튼:', tabBtn, '탭 컨텐츠:', tabContent); // 디버깅용
+            
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.classList.add('active');
             
             // 전체 리스트 탭으로 전환할 때 데이터 렌더링
             if (tab === 'list') {
-                window.adminPanel.renderAllItems();
+                console.log('전체 리스트 렌더링 시작');
+                setTimeout(() => {
+                    window.adminPanel.renderAllItems();
+                }, 100); // 약간의 지연을 주어 DOM이 완전히 업데이트되도록
             }
         };
 
