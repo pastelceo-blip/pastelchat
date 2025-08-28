@@ -582,12 +582,12 @@
                 <div class="form-section">
                     <h3>전체 데이터 관리</h3>
                     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                        <button class="btn btn-primary" onclick="adminPanel.filterList('all')">전체 보기</button>
-                        <button class="btn" onclick="adminPanel.filterList('customer')" style="background: #6c757d; color: white;">고객지원만</button>
-                        <button class="btn" onclick="adminPanel.filterList('business')" style="background: #6c757d; color: white;">업무지원만</button>
+                        <button class="btn btn-primary filter-active" onclick="window.filterList('all')">전체 보기</button>
+                        <button class="btn" onclick="window.filterList('customer')" style="background: #6c757d; color: white;">고객지원만</button>
+                        <button class="btn" onclick="window.filterList('business')" style="background: #6c757d; color: white;">업무지원만</button>
                     </div>
                     <div style="margin-bottom: 20px;">
-                        <input type="text" id="searchInput" placeholder="제목이나 키워드로 검색..." style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;" oninput="adminPanel.searchItems()">
+                        <input type="text" id="searchInput" placeholder="제목이나 키워드로 검색..." style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;" oninput="window.searchItems()">
                     </div>
                 </div>
                 
@@ -603,7 +603,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>항목 수정</h3>
-                <button class="modal-close" onclick="adminPanel.closeEditModal()">×</button>
+                <button class="modal-close" onclick="window.adminPanel.closeEditModal()">×</button>
             </div>
             <div class="modal-body">
                 <form id="editForm">
@@ -622,7 +622,7 @@
                         <input type="text" id="editKeywords" required>
                     </div>
                     <div class="modal-actions">
-                        <button type="button" class="btn" onclick="adminPanel.closeEditModal()" style="background: #6c757d; color: white;">취소</button>
+                        <button type="button" class="btn" onclick="window.adminPanel.closeEditModal()" style="background: #6c757d; color: white;">취소</button>
                         <button type="submit" class="btn btn-primary">수정 완료</button>
                     </div>
                 </form>
@@ -777,8 +777,8 @@
                             <span class="data-keywords">키워드: ${item.keywords}</span>
                         </div>
                         <div class="data-actions">
-                            <button class="btn btn-primary btn-sm" onclick="adminPanel.editItem('customer', ${item.id})">수정</button>
-                            <button class="btn btn-danger btn-sm" onclick="adminPanel.deleteItem('customer', ${item.id})">삭제</button>
+                            <button class="btn btn-primary btn-sm" onclick="window.adminPanel.editItem('customer', ${item.id})">수정</button>
+                            <button class="btn btn-danger btn-sm" onclick="window.adminPanel.deleteItem('customer', ${item.id})">삭제</button>
                         </div>
                     </div>
                 `).join('');
@@ -799,8 +799,8 @@
                             <span class="data-keywords">키워드: ${item.keywords}</span>
                         </div>
                         <div class="data-actions">
-                            <button class="btn btn-primary btn-sm" onclick="adminPanel.editItem('business', ${item.id})">수정</button>
-                            <button class="btn btn-danger btn-sm" onclick="adminPanel.deleteItem('business', ${item.id})">삭제</button>
+                            <button class="btn btn-primary btn-sm" onclick="window.adminPanel.editItem('business', ${item.id})">수정</button>
+                            <button class="btn btn-danger btn-sm" onclick="window.adminPanel.deleteItem('business', ${item.id})">삭제</button>
                         </div>
                     </div>
                 `).join('');
@@ -891,6 +891,15 @@
             
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
             document.getElementById(`${tab}Tab`).classList.add('active');
+        };
+
+        // 필터링 함수를 전역으로 노출
+        window.filterList = (filter) => {
+            window.adminPanel.filterList(filter);
+        };
+
+        window.searchItems = () => {
+            window.adminPanel.searchItems();
         };
     </script>
 </body>
