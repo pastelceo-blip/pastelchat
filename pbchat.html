@@ -204,35 +204,39 @@
             text-align: right;
         }
         
-        /* 이미지 스타일 */
-        .message-image {
+        /* 이미지 컨테이너 - 16:9 비율 강제 적용 */
+        .image-container {
+            position: relative;
             width: 100%;
             max-width: 400px;
-            height: 225px; /* 400px * 9/16 = 225px for 16:9 ratio */
-            object-fit: cover;
-            border-radius: 12px;
+            padding-top: 56.25%; /* 16:9 비율 (9/16 * 100) */
             margin: 12px 0;
+            border-radius: 12px;
+            overflow: hidden;
             box-shadow: 0 4px 16px rgba(139, 69, 19, 0.15);
             cursor: pointer;
             transition: all 0.3s ease;
+        }
+        
+        .image-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.25);
+        }
+        
+        /* 이미지 스타일 */
+        .message-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
             pointer-events: auto;
-            display: block;
-        }
-        
-        .message-image:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.25);
-        }
-        
-        .image-container {
-            position: relative;
-            display: block;
-            width: 100%;
-            max-width: 400px;
         }
         
         .image-hint {
@@ -247,6 +251,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
+            z-index: 1;
         }
         
         .image-container:hover .image-hint {
