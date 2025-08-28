@@ -204,6 +204,43 @@
             text-align: right;
         }
         
+        /* 이미지 스타일 추가 */
+        .message-image {
+            max-width: 100%;
+            width: auto;
+            max-height: 200px;
+            border-radius: 12px;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .message-image:hover {
+            transform: scale(1.02);
+        }
+        
+        /* 이미지 모달 */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+        
         .input-container {
             padding: 16px;
             background: #FAF7F2;
@@ -315,6 +352,11 @@
         </div>
     </div>
 
+    <!-- 이미지 모달 -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <img id="modalImage" src="" alt="확대된 이미지">
+    </div>
+
     <!-- Firebase 9 SDK 모듈 방식 -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
@@ -326,23 +368,17 @@
             authDomain: "pastelmovie-cac7a.firebaseapp.com",
             databaseURL: "https://pastelmovie-cac7a-default-rtdb.firebaseio.com",
             projectId: "pastelmovie-cac7a",
-            storageBucket: "pastelmovie-cac7a.firebasestorage.app",
+            storageBucket: "pastelmovie-cac7a.appspot.com",
             messagingSenderId: "543294016464",
             appId: "1:543294016464:web:47162285ca02d3cfb587d5",
             measurementId: "G-LK2Q13294B"
         };
 
-        // Firebase 초기화 - 연결 최적화 설정
+        // Firebase 초기화
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        
-        // Firestore 연결 설정 최적화
-        db.settings = {
-            cacheSizeBytes: 40000000, // 40MB 캐시
-            experimentalForceLongPolling: false // 웹소켓 우선 사용
-        };
 
         // 인증 상태 변화 감지
         onAuthStateChanged(auth, (user) => {
@@ -416,43 +452,23 @@
                 try {
                     this.showLoading(true);
                     
-                    // 연결 재시도 로직 추가
-                    const maxRetries = 3;
-                    let retryCount = 0;
+                    const customerDoc = await getDoc(doc(db, 'faqs', 'customer'));
+                    const businessDoc = await getDoc(doc(db, 'faqs', 'business'));
                     
-                    while (retryCount < maxRetries) {
-                        try {
-                            const customerDoc = await getDoc(doc(db, 'faqs', 'customer'));
-                            const businessDoc = await getDoc(doc(db, 'faqs', 'business'));
-                            
-                            if (customerDoc.exists() && businessDoc.exists()) {
-                                this.faqDB = customerDoc.data().items || [];
-                                this.businessDB = businessDoc.data().items || [];
-                                
-                                this.currentDB = this.faqDB;
-                                this.isDataLoaded = true;
-                                
-                                this.updateLastMessage("안녕하세요! 🤖\n파스텔무비 로봇 파봇이에요!\n편하게 일 하실 수 있도록 제가 도와드릴게요");
-                                return; // 성공시 함수 종료
-                            } else {
-                                await this.createSampleData();
-                                return; // 성공시 함수 종료
-                            }
-                        } catch (error) {
-                            retryCount++;
-                            console.error(`데이터 로딩 시도 ${retryCount} 실패:`, error);
-                            
-                            if (retryCount >= maxRetries) {
-                                throw error; // 최대 재시도 초과시 에러 던지기
-                            }
-                            
-                            // 재시도 전 잠시 대기
-                            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                        }
+                    if (customerDoc.exists() && businessDoc.exists()) {
+                        this.faqDB = customerDoc.data().items || [];
+                        this.businessDB = businessDoc.data().items || [];
+                        
+                        this.currentDB = this.faqDB;
+                        this.isDataLoaded = true;
+                        
+                        this.updateLastMessage("안녕하세요! 🤖\n파스텔무비 로봇 파봇이에요!\n편하게 일 하실 수 있도록 제가 도와드릴게요");
+                    } else {
+                        await this.createSampleData();
                     }
                     
                 } catch (error) {
-                    console.error('데이터 로딩 최종 실패:', error);
+                    console.error('데이터 로딩 실패:', error);
                     this.loadFallbackData();
                 } finally {
                     this.showLoading(false);
@@ -543,11 +559,34 @@
                 }
             }
 
-            addMessage(message, type) {
+            addMessage(message, type, imageUrl = null) {
                 const messagesDiv = document.getElementById('chatMessages');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${type}-message`;
-                messageDiv.textContent = message;
+                
+                // 텍스트 추가
+                if (message) {
+                    const textNode = document.createTextNode(message);
+                    messageDiv.appendChild(textNode);
+                }
+                
+                // 이미지 추가
+                if (imageUrl && imageUrl.trim() !== '') {
+                    const imgElement = document.createElement('img');
+                    imgElement.className = 'message-image';
+                    imgElement.src = imageUrl;
+                    imgElement.alt = '첨부 이미지';
+                    imgElement.onerror = function() {
+                        this.style.display = 'none';
+                        console.error('이미지 로드 실패:', imageUrl);
+                    };
+                    imgElement.onclick = function() {
+                        window.openImageModal(imageUrl);
+                    };
+                    messageDiv.appendChild(document.createElement('br'));
+                    messageDiv.appendChild(imgElement);
+                }
+                
                 messagesDiv.appendChild(messageDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
@@ -556,7 +595,17 @@
                 const messages = document.querySelectorAll('.message');
                 const lastMessage = messages[messages.length - 1];
                 if (lastMessage) {
-                    lastMessage.textContent = newText;
+                    // 기존 텍스트 노드만 변경하고 이미지는 유지
+                    const textNodes = [];
+                    for (let node of lastMessage.childNodes) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            textNodes.push(node);
+                        }
+                    }
+                    textNodes.forEach(node => {
+                        lastMessage.removeChild(node);
+                    });
+                    lastMessage.insertBefore(document.createTextNode(newText), lastMessage.firstChild);
                 }
             }
 
@@ -599,7 +648,13 @@
                 
                 setTimeout(() => {
                     const response = this.processUserInput(inputText);
-                    this.addMessage(response, 'bot');
+                    if (typeof response === 'object' && response.content) {
+                        // 이미지가 포함된 응답
+                        this.addMessage(response.content, 'bot', response.image);
+                    } else {
+                        // 텍스트만 응답
+                        this.addMessage(response, 'bot');
+                    }
                 }, 300);
             }
 
@@ -615,11 +670,22 @@
                     return `'${userInput}'에 대한 정보를 찾지 못했습니다.`;
                 } else if (results.length === 1) {
                     this.copyToClipboard(results[0].content);
+                    // 이미지가 있으면 함께 반환
+                    if (results[0].image && results[0].image.trim() !== '') {
+                        return {
+                            content: results[0].content,
+                            image: results[0].image
+                        };
+                    }
                     return results[0].content;
                 } else {
                     let response = `${results.length}개의 결과를 찾았습니다:\n\n`;
                     results.slice(0, 5).forEach((item, index) => {
-                        response += `${index + 1}. ${item.title}\n`;
+                        response += `${index + 1}. ${item.title}`;
+                        if (item.image && item.image.trim() !== '') {
+                            response += ` 📷`;
+                        }
+                        response += `\n`;
                     });
                     return response;
                 }
@@ -631,6 +697,18 @@
                 }
             }
         }
+
+        // 이미지 모달 함수들
+        window.openImageModal = function(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'flex';
+            modalImg.src = imageSrc;
+        };
+
+        window.closeImageModal = function() {
+            document.getElementById('imageModal').style.display = 'none';
+        };
 
         // 전역 챗봇 인스턴스 생성
         window.chatbot = new Chatbot();
@@ -644,24 +722,6 @@
                 window.chatbot.sendMessage();
             }
         };
-        
-        // 페이지 종료 시 정리 작업
-        window.addEventListener('beforeunload', (event) => {
-            // Firestore 연결 정리는 자동으로 처리되므로 별도 작업 불필요
-            console.log('페이지 종료 중...');
-        });
-        
-        // 네트워크 상태 감지
-        window.addEventListener('online', () => {
-            console.log('네트워크 연결됨');
-            if (window.chatbot && !window.chatbot.isDataLoaded) {
-                window.chatbot.loadData();
-            }
-        });
-        
-        window.addEventListener('offline', () => {
-            console.log('네트워크 끊김');
-        });
     </script>
 </body>
 </html>
