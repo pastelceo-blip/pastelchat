@@ -204,6 +204,14 @@
             text-align: right;
         }
         
+        /* 검색 결과 강조 표시 */
+        .search-highlight {
+            background: rgba(255, 255, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
         /* 이미지 컨테이너 - 16:9 비율 강제 적용 */
         .image-container {
             position: relative;
@@ -453,8 +461,6 @@
             }
         });
 
-        // Google 로그인 - 모듈 내부 함수 제거
-
         // 로그인 화면 표시
         function showLogin() {
             document.getElementById('loginContainer').classList.remove('hidden');
@@ -476,7 +482,108 @@
             }
         }
 
-        // 챗봇 클래스
+        // 한글 초성 추출 함수
+        function getChosung(text) {
+            const choSung = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+            let result = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                const code = text.charCodeAt(i) - 44032;
+                if (code > -1 && code < 11172) {
+                    result += choSung[Math.floor(code / 588)];
+                } else {
+                    result += text.charAt(i);
+                }
+            }
+            return result;
+        }
+
+        // 유사도 계산 함수 (향상된 버전)
+        function calculateSimilarity(query, target) {
+            const normalizedQuery = query.toLowerCase().replace(/\s+/g, '');
+            const normalizedTarget = target.toLowerCase().replace(/\s+/g, '');
+            
+            let score = 0;
+            
+            // 1. 완전 일치 검사 (가장 높은 점수)
+            if (normalizedQuery === normalizedTarget) {
+                return 100;
+            }
+            
+            // 2. 부분 문자열 포함 검사
+            if (normalizedTarget.includes(normalizedQuery)) {
+                score += 50;
+            }
+            if (normalizedQuery.includes(normalizedTarget)) {
+                score += 40;
+            }
+            
+            // 3. 단어별 일치 검사
+            const queryWords = normalizedQuery.split(/[\s,]+/);
+            const targetWords = normalizedTarget.split(/[\s,]+/);
+            
+            let matchingWords = 0;
+            for (const qWord of queryWords) {
+                for (const tWord of targetWords) {
+                    if (qWord === tWord) {
+                        matchingWords++;
+                        score += 20;
+                    } else if (qWord.includes(tWord) || tWord.includes(qWord)) {
+                        score += 10;
+                    }
+                }
+            }
+            
+            // 4. 초성 검사 (한글)
+            const queryChosung = getChosung(normalizedQuery);
+            const targetChosung = getChosung(normalizedTarget);
+            
+            if (queryChosung === targetChosung) {
+                score += 15;
+            } else if (targetChosung.includes(queryChosung)) {
+                score += 10;
+            }
+            
+            // 5. 레벤슈타인 거리 기반 유사도
+            const distance = levenshteinDistance(normalizedQuery, normalizedTarget);
+            const maxLength = Math.max(normalizedQuery.length, normalizedTarget.length);
+            if (maxLength > 0) {
+                score += Math.max(0, (1 - distance / maxLength) * 30);
+            }
+            
+            return Math.min(100, score);
+        }
+
+        // 레벤슈타인 거리 계산
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+
+        // 챗봇 클래스 (개선된 버전)
         class Chatbot {
             constructor() {
                 this.currentTab = 'customer';
@@ -485,6 +592,7 @@
                 this.isDataLoaded = false;
                 this.faqDB = [];
                 this.businessDB = [];
+                this.minSimilarityScore = 15; // 최소 유사도 점수
             }
 
             async initialize() {
@@ -526,7 +634,21 @@
                             id: 1,
                             title: "워터마크 제거가 안되요",
                             content: "네이버에서 구매하신 상품의 아이디로 워터마크 제거가 가능합니다. 구매 후 5-15분 정도 소요될 수 있습니다.",
-                            keywords: "워터마크,제거,안되요,아이디,입력",
+                            keywords: "워터마크,제거,안되요,아이디,입력,삭제,없애기",
+                            exception: ""
+                        },
+                        {
+                            id: 2,
+                            title: "결제 문제",
+                            content: "결제 관련 문제가 있으시면 고객센터로 연락 부탁드립니다.",
+                            keywords: "결제,돈,카드,계좌이체,페이,결제오류,결제실패",
+                            exception: ""
+                        },
+                        {
+                            id: 3,
+                            title: "다운로드 방법",
+                            content: "구매 완료 후 마이페이지에서 다운로드 받으실 수 있습니다.",
+                            keywords: "다운로드,받기,저장,파일,영상,동영상",
                             exception: ""
                         }
                     ]
@@ -538,7 +660,14 @@
                             id: 1,
                             title: "계좌번호",
                             content: "국민 (예금주: 이용현) 781601-00-204630 입니다 입금 후 말씀 부탁드리겠습니다.",
-                            keywords: "계좌,번호",
+                            keywords: "계좌,번호,입금,송금,계좌이체",
+                            exception: ""
+                        },
+                        {
+                            id: 2,
+                            title: "업무 시간",
+                            content: "평일 오전 9시부터 오후 6시까지 업무합니다.",
+                            keywords: "업무시간,근무시간,영업시간,시간",
                             exception: ""
                         }
                     ]
@@ -569,7 +698,7 @@
                         id: 1,
                         title: "워터마크 제거 방법",
                         content: "네이버에서 구매하신 상품의 아이디로 워터마크 제거가 가능합니다.",
-                        keywords: "워터마크,제거",
+                        keywords: "워터마크,제거,삭제,없애기",
                         exception: ""
                     }
                 ];
@@ -579,7 +708,7 @@
                         id: 1,
                         title: "계좌번호",
                         content: "국민 (예금주: 이용현) 781601-00-204630",
-                        keywords: "계좌,번호",
+                        keywords: "계좌,번호,입금",
                         exception: ""
                     }
                 ];
@@ -654,7 +783,6 @@
                 const messages = document.querySelectorAll('.message');
                 const lastMessage = messages[messages.length - 1];
                 if (lastMessage) {
-                    // 기존 텍스트 노드만 변경하고 이미지는 유지
                     const textNodes = [];
                     for (let node of lastMessage.childNodes) {
                         if (node.nodeType === Node.TEXT_NODE) {
@@ -708,10 +836,8 @@
                 setTimeout(() => {
                     const response = this.processUserInput(inputText);
                     if (typeof response === 'object' && response.content) {
-                        // 이미지가 포함된 응답
                         this.addMessage(response.content, 'bot', response.image);
                     } else {
-                        // 텍스트만 응답
                         this.addMessage(response, 'bot');
                     }
                 }, 300);
@@ -726,12 +852,10 @@
                         const selectedFaq = this.lastSearchResults[selectedIndex];
                         this.lastSearchResults = [];
                         
-                        // 복사 실행
                         setTimeout(() => {
                             window.copyToClipboard(selectedFaq.content);
                         }, 100);
                         
-                        // 이미지가 있는 경우 함께 반환
                         if (selectedFaq.image && selectedFaq.image.trim() !== '') {
                             return {
                                 content: selectedFaq.content,
@@ -743,25 +867,19 @@
                     }
                 }
 
-                const query = userInput.toLowerCase();
-                const results = this.currentDB.filter(item => {
-                    const keywords = item.keywords.toLowerCase();
-                    const title = item.title.toLowerCase();
-                    return keywords.includes(query) || title.includes(query) || query.split(' ').some(word => keywords.includes(word));
-                });
+                // 향상된 검색 알고리즘
+                const results = this.advancedSearch(userInput);
 
                 if (results.length === 0) {
                     this.lastSearchResults = [];
-                    return `'${userInput}'에 대한 정보를 찾지 못했습니다.`;
+                    return `'${userInput}'에 대한 정보를 찾지 못했습니다.\n\n💡 다음과 같이 검색해보세요:\n• 키워드를 바꿔서 검색\n• 짧은 단어로 검색\n• 초성으로 검색 (예: ㅇㅌㅁㅋ)`;
                 } else if (results.length === 1) {
                     this.lastSearchResults = [];
                     
-                    // 복사 실행
                     setTimeout(() => {
                         window.copyToClipboard(results[0].content);
                     }, 100);
                     
-                    // 이미지가 있으면 함께 반환
                     if (results[0].image && results[0].image.trim() !== '') {
                         return {
                             content: results[0].content,
@@ -770,12 +888,14 @@
                     }
                     return results[0].content;
                 } else {
-                    // 여러 결과가 있을 때는 복사하지 않음
                     this.lastSearchResults = results.slice(0, 6);
                     
                     let response = `🎯 '${userInput}' 관련 정보 ${results.length}개를 찾았습니다!\n\n`;
                     this.lastSearchResults.forEach((item, index) => {
                         response += `${index + 1}️⃣ ${item.title}`;
+                        if (item.score) {
+                            response += ` (관련도: ${Math.round(item.score)}%)`;
+                        }
                         if (item.image && item.image.trim() !== '') {
                             response += ` 📷`;
                         }
@@ -787,7 +907,47 @@
                 }
             }
 
-            // lastSearchResults 초기화 메서드
+            // 향상된 검색 메서드
+            advancedSearch(query) {
+                const normalizedQuery = query.toLowerCase().trim();
+                const results = [];
+                
+                for (const item of this.currentDB) {
+                    let maxScore = 0;
+                    
+                    // 제목과 키워드에서 각각 유사도 계산
+                    const titleScore = calculateSimilarity(normalizedQuery, item.title);
+                    const keywordScore = calculateSimilarity(normalizedQuery, item.keywords);
+                    const contentScore = calculateSimilarity(normalizedQuery, item.content) * 0.5; // 내용은 가중치 0.5
+                    
+                    maxScore = Math.max(titleScore, keywordScore, contentScore);
+                    
+                    // 부분 검색도 고려
+                    const queryParts = normalizedQuery.split(/\s+/);
+                    for (const part of queryParts) {
+                        if (part.length > 1) {
+                            maxScore = Math.max(maxScore, 
+                                calculateSimilarity(part, item.title),
+                                calculateSimilarity(part, item.keywords)
+                            );
+                        }
+                    }
+                    
+                    // 최소 점수 이상만 결과에 포함
+                    if (maxScore >= this.minSimilarityScore) {
+                        results.push({
+                            ...item,
+                            score: maxScore
+                        });
+                    }
+                }
+                
+                // 점수순으로 정렬 (내림차순)
+                results.sort((a, b) => b.score - a.score);
+                
+                return results;
+            }
+
             clearSearchResults() {
                 this.lastSearchResults = [];
             }
@@ -818,7 +978,6 @@
             }
         };
 
-        // 폴백 복사 방법
         function fallbackCopy(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -829,7 +988,6 @@
             showCopyNotification();
         }
 
-        // 복사 완료 알림 표시
         function showCopyNotification() {
             const notification = document.getElementById('copyNotification');
             if (notification) {
