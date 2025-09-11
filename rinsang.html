@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새로운 챗봇 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #A0937D;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: #FEFCF9;
+            border-radius: 20px;
+            box-shadow: 0 32px 64px rgba(101, 67, 33, 0.15);
+            padding: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .login-container h1 {
+            color: #8B4513;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .login-container p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .google-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .google-login-btn:hover {
+            background: #f8f9fa;
+            border-color: #8B4513;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .chatbot-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background: #FEFCF9;
+            backdrop-filter: blur(20px);
+            border-radius: 0;
+            box-shadow: 0 32px 64px rgba(101, 67, 33, 0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chatbot-header {
+            background: #8B4513;
+            padding: 20px 16px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .chatbot-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.025em;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .tab-button {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #8B4513;
+            border-color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #FEFCF9;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            white-space: pre-line;
+            font-size: 0.9rem;
+        }
+        
+        .bot-message {
+            background: #FFFFFF;
+            border: 1px solid #E5D5C8;
+            color: #3C2415;
+            margin-right: 15%;
+        }
+        
+        .user-message {
+            background: #8B4513;
+            color: white;
+            margin-left: 15%;
+            text-align: right;
+        }
+        
+        /* 검색 결과 강조 표시 */
+        .search-highlight {
+            background: rgba(255, 255, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        /* 이미지 컨테이너 - 16:9 비율 강제 적용 */
+        .image-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            padding-top: 56.25%; /* 16:9 비율 (9/16 * 100) */
+            margin: 12px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(139, 69, 19, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .image-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.25);
+        }
+        
+        /* 이미지 스타일 */
+        .message-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: auto;
+        }
+        
+        .image-hint {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .image-container:hover .image-hint {
+            opacity: 1;
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #8B4513;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 8px 32px rgba(139, 69, 19, 0.3);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .copy-notification.show {
+            opacity: 1;
+        }
+        
+        /* 이미지 모달 */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+        
+        .input-container {
+            padding: 16px;
+            background: #FAF7F2;
+            border-top: 1px solid #E5D5C8;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #D7BB9C;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #FFFFFF;
+            resize: none;
+            min-height: 48px;
+        }
+        
+        .send-btn {
+            padding: 14px 22px;
+            background: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            min-width: 70px;
+            min-height: 48px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: #8B4513;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .show {
+            display: flex !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div class="login-container" id="loginContainer">
+        <h1>🤖 새로운 챗봇</h1>
+        <p>새로운 챗봇 시스템에 오신 것을 환영합니다!</p>
+        <button class="google-login-btn" onclick="signInWithGoogle()">
+            <svg class="google-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google로 로그인
+        </button>
+    </div>
+
+    <!-- 챗봇 화면 -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <div class="user-info">
+                <div class="user-profile">
+                    <img class="user-avatar" id="userAvatar" alt="User Avatar">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <button class="logout-btn" onclick="signOut()">로그아웃</button>
+            </div>
+            <h1>🤖 새로운 챗봇</h1>
+            <div class="tab-container">
+                <button class="tab-button active" onclick="switchTab('customer')" data-tab="customer">
+                    고객지원
+                </button>
+                <button class="tab-button" onclick="switchTab('business')" data-tab="business">
+                    업무지원
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages"></div>
+        
+        <div class="input-container">
+            <div class="input-row">
+                <textarea 
+                    id="userInput" 
+                    placeholder="궁금한 것을 입력하세요..." 
+                    rows="1"
+                    onkeydown="handleKeyPress(event)"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 복사 완료 알림 -->
+    <div id="copyNotification" class="copy-notification">
+        복사가 완료되었습니다
+    </div>
+
+    <!-- 이미지 모달 -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <img id="modalImage" src="" alt="확대된 이미지">
+    </div>
+
+    <!-- Firebase 9 SDK 모듈 방식 -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
+        // 기존 프로젝트와 동일한 Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAXr7parhL6wQuUzy4MPvVhV6-J53wzcA",
+            authDomain: "pastelmovie-cac7a.firebaseapp.com",
+            databaseURL: "https://pastelmovie-cac7a-default-rtdb.firebaseio.com",
+            projectId: "pastelmovie-cac7a",
+            storageBucket: "pastelmovie-cac7a.firebasestorage.app",
+            messagingSenderId: "543294016464",
+            appId: "1:543294016464:web:47162285ca02d3cfb587d5",
+            measurementId: "G-LK2Q13294B"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // 인증 상태 변화 감지
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                showChatbot(user);
+            } else {
+                showLogin();
+            }
+        });
+
+        // 로그인 화면 표시
+        function showLogin() {
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('chatbotContainer').classList.remove('show');
+        }
+
+        // 챗봇 화면 표시
+        function showChatbot(user) {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('chatbotContainer').classList.add('show');
+            
+            // 사용자 정보 표시
+            document.getElementById('userName').textContent = user.displayName || user.email;
+            document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/32';
+            
+            // 챗봇 초기화 (로그인 후에만)
+            if (window.chatbot) {
+                window.chatbot.initialize();
+            }
+        }
+
+        // 한글 초성 추출 함수
+        function getChosung(text) {
+            const choSung = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+            let result = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                const code = text.charCodeAt(i) - 44032;
+                if (code > -1 && code < 11172) {
+                    result += choSung[Math.floor(code / 588)];
+                } else {
+                    result += text.charAt(i);
+                }
+            }
+            return result;
+        }
+
+        // 유사도 계산 함수 (향상된 버전)
+        function calculateSimilarity(query, target) {
+            const normalizedQuery = query.toLowerCase().replace(/\s+/g, '');
+            const normalizedTarget = target.toLowerCase().replace(/\s+/g, '');
+            
+            let score = 0;
+            
+            // 1. 완전 일치 검사 (가장 높은 점수)
+            if (normalizedQuery === normalizedTarget) {
+                return 100;
+            }
+            
+            // 2. 부분 문자열 포함 검사
+            if (normalizedTarget.includes(normalizedQuery)) {
+                score += 50;
+            }
+            if (normalizedQuery.includes(normalizedTarget)) {
+                score += 40;
+            }
+            
+            // 3. 단어별 일치 검사
+            const queryWords = normalizedQuery.split(/[\s,]+/);
+            const targetWords = normalizedTarget.split(/[\s,]+/);
+            
+            let matchingWords = 0;
+            for (const qWord of queryWords) {
+                for (const tWord of targetWords) {
+                    if (qWord === tWord) {
+                        matchingWords++;
+                        score += 20;
+                    } else if (qWord.includes(tWord) || tWord.includes(qWord)) {
+                        score += 10;
+                    }
+                }
+            }
+            
+            // 4. 초성 검사 (한글)
+            const queryChosung = getChosung(normalizedQuery);
+            const targetChosung = getChosung(normalizedTarget);
+            
+            if (queryChosung === targetChosung) {
+                score += 15;
+            } else if (targetChosung.includes(queryChosung)) {
+                score += 10;
+            }
+            
+            // 5. 레벤슈타인 거리 기반 유사도
+            const distance = levenshteinDistance(normalizedQuery, normalizedTarget);
+            const maxLength = Math.max(normalizedQuery.length, normalizedTarget.length);
+            if (maxLength > 0) {
+                score += Math.max(0, (1 - distance / maxLength) * 30);
+            }
+            
+            return Math.min(100, score);
+        }
+
+        // 레벤슈타인 거리 계산
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+
+        // 챗봇 클래스 (새로운 컬렉션 사용)
+        class Chatbot {
+            constructor() {
+                this.currentTab = 'customer';
+                this.currentDB = [];
+                this.lastSearchResults = [];
+                this.isDataLoaded = false;
+                this.faqDB = [];
+                this.businessDB = [];
+                this.minSimilarityScore = 15; // 최소 유사도 점수
+            }
+
+            async initialize() {
+                this.addMessage("안녕하세요! 🤖\n새로운 챗봇 시스템에 오신 것을 환영합니다!\n데이터를 불러오는 중...", 'bot');
+                await this.loadData();
+            }
+
+            async loadData() {
+                try {
+                    this.showLoading(true);
+                    
+                    // 새로운 컬렉션 이름 사용 (기존 데이터와 분리)
+                    const customerDoc = await getDoc(doc(db, 'new_chatbot_faqs', 'customer'));
+                    const businessDoc = await getDoc(doc(db, 'new_chatbot_faqs', 'business'));
+                    
+                    if (customerDoc.exists() && businessDoc.exists()) {
+                        this.faqDB = customerDoc.data().items || [];
+                        this.businessDB = businessDoc.data().items || [];
+                        
+                        this.currentDB = this.faqDB;
+                        this.isDataLoaded = true;
+                        
+                        this.updateLastMessage("안녕하세요! 🤖\n새로운 챗봇 시스템입니다!\n편하게 일 하실 수 있도록 제가 도와드릴게요");
+                    } else {
+                        await this.createSampleData();
+                    }
+                    
+                } catch (error) {
+                    console.error('데이터 로딩 실패:', error);
+                    this.loadFallbackData();
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async createSampleData() {
+                const sampleCustomerData = {
+                    items: [
+                        {
+                            id: 1,
+                            title: "새로운 서비스 이용방법",
+                            content: "새로운 서비스는 로그인 후 메뉴에서 접근하실 수 있습니다. 자세한 이용 가이드는 도움말을 참고해주세요.",
+                            keywords: "서비스,이용방법,가이드,도움말,사용법",
+                            exception: ""
+                        },
+                        {
+                            id: 2,
+                            title: "계정 문제",
+                            content: "계정 관련 문제가 있으시면 고객센터로 연락 부탁드립니다. 빠르게 도움드리겠습니다.",
+                            keywords: "계정,로그인,비밀번호,문제,오류",
+                            exception: ""
+                        },
+                        {
+                            id: 3,
+                            title: "기능 안내",
+                            content: "주요 기능은 대시보드에서 확인하실 수 있습니다. 추가 기능이 궁금하시면 언제든 문의해주세요.",
+                            keywords: "기능,안내,대시보드,메뉴,사용",
+                            exception: ""
+                        }
+                    ]
+                };
+
+                const sampleBusinessData = {
+                    items: [
+                        {
+                            id: 1,
+                            title: "새로운 연락처",
+                            content: "새로운 업무 연락처: 02-1234-5678 (평일 9시-18시)",
+                            keywords: "연락처,전화번호,업무,문의",
+                            exception: ""
+                        },
+                        {
+                            id: 2,
+                            title: "업무 일정",
+                            content: "업무 시간은 평일 오전 9시부터 오후 6시까지입니다. 점심시간은 12시-13시입니다.",
+                            keywords: "업무시간,근무시간,일정,시간표",
+                            exception: ""
+                        }
+                    ]
+                };
+
+                try {
+                    // 새로운 컬렉션에 데이터 저장 (기존 데이터와 분리)
+                    await setDoc(doc(db, 'new_chatbot_faqs', 'customer'), sampleCustomerData);
+                    await setDoc(doc(db, 'new_chatbot_faqs', 'business'), sampleBusinessData);
+                    
+                    this.faqDB = sampleCustomerData.items;
+                    this.businessDB = sampleBusinessData.items;
+                    this.currentDB = this.faqDB;
+                    this.isDataLoaded = true;
+                    
+                    this.updateLastMessage("안녕하세요! 🤖\n새로운 챗봇 시스템이 준비되었습니다!");
+                    
+                } catch (error) {
+                    console.error('샘플 데이터 생성 실패:', error);
+                    this.loadFallbackData();
+                }
+            }
+
+            loadFallbackData() {
+                this.addMessage("네트워크 연결을 확인해주세요. 오프라인 모드로 실행됩니다.", 'bot');
+                
+                this.faqDB = [
+                    {
+                        id: 1,
+                        title: "기본 도움말",
+                        content: "새로운 챗봇 시스템의 기본 도움말입니다.",
+                        keywords: "도움말,기본,안내",
+                        exception: ""
+                    }
+                ];
+                
+                this.businessDB = [
+                    {
+                        id: 1,
+                        title: "기본 업무 정보",
+                        content: "기본 업무 정보를 제공합니다.",
+                        keywords: "업무,기본,정보",
+                        exception: ""
+                    }
+                ];
+                
+                this.currentDB = this.faqDB;
+                this.isDataLoaded = true;
+            }
+
+            showLoading(show) {
+                const sendBtn = document.getElementById('sendBtn');
+                const userInput = document.getElementById('userInput');
+                
+                if (show) {
+                    sendBtn.innerHTML = '<div class="loading"></div>';
+                    sendBtn.disabled = true;
+                    userInput.disabled = true;
+                } else {
+                    sendBtn.innerHTML = '전송';
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                }
+            }
+
+            addMessage(message, type, imageUrl = null) {
+                const messagesDiv = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-message`;
+                
+                // 텍스트 추가
+                if (message) {
+                    const textNode = document.createTextNode(message);
+                    messageDiv.appendChild(textNode);
+                }
+                
+                // 이미지 추가
+                if (imageUrl && imageUrl.trim() !== '') {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'image-container';
+                    imageContainer.style.marginTop = '12px';
+                    
+                    const imgElement = document.createElement('img');
+                    imgElement.className = 'message-image';
+                    imgElement.src = imageUrl;
+                    imgElement.alt = '첨부 이미지';
+                    imgElement.onerror = function() {
+                        this.style.display = 'none';
+                        const errorMsg = document.createElement('div');
+                        errorMsg.textContent = '⚠️ 이미지를 불러올 수 없습니다.';
+                        errorMsg.style.color = '#999';
+                        errorMsg.style.fontSize = '0.8rem';
+                        imageContainer.appendChild(errorMsg);
+                    };
+                    imgElement.onclick = function() {
+                        window.openImageModal(imageUrl);
+                    };
+                    
+                    const hint = document.createElement('div');
+                    hint.className = 'image-hint';
+                    hint.textContent = '우클릭 복사';
+                    
+                    imageContainer.appendChild(imgElement);
+                    imageContainer.appendChild(hint);
+                    messageDiv.appendChild(document.createElement('br'));
+                    messageDiv.appendChild(imageContainer);
+                }
+                
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+
+            updateLastMessage(newText) {
+                const messages = document.querySelectorAll('.message');
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage) {
+                    const textNodes = [];
+                    for (let node of lastMessage.childNodes) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            textNodes.push(node);
+                        }
+                    }
+                    textNodes.forEach(node => {
+                        lastMessage.removeChild(node);
+                    });
+                    lastMessage.insertBefore(document.createTextNode(newText), lastMessage.firstChild);
+                }
+            }
+
+            switchTab(tab) {
+                if (!this.isDataLoaded) {
+                    this.addMessage("데이터를 불러오는 중입니다. 잠시만 기다려주세요.", 'bot');
+                    return;
+                }
+                
+                this.currentTab = tab;
+                
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+                
+                if (tab === 'customer') {
+                    this.currentDB = this.faqDB;
+                    this.addMessage("고객지원 모드로 변신!", 'bot');
+                } else {
+                    this.currentDB = this.businessDB;
+                    this.addMessage("업무지원 모드로 변신!", 'bot');
+                }
+                
+                this.lastSearchResults = [];
+            }
+
+            sendMessage() {
+                if (!this.isDataLoaded) {
+                    this.addMessage("데이터를 불러오는 중입니다.", 'bot');
+                    return;
+                }
+                
+                const userInput = document.getElementById('userInput');
+                if (!userInput || !userInput.value.trim()) return;
+
+                const inputText = userInput.value.trim();
+                this.addMessage(inputText, 'user');
+                userInput.value = '';
+                
+                setTimeout(() => {
+                    const response = this.processUserInput(inputText);
+                    if (typeof response === 'object' && response.content) {
+                        this.addMessage(response.content, 'bot', response.image);
+                    } else {
+                        this.addMessage(response, 'bot');
+                    }
+                }, 300);
+            }
+
+            processUserInput(userInput) {
+                // 숫자 입력 처리 (이전 검색 결과에서 선택)
+                const isNumber = /^[1-9]\d*$/.test(userInput.trim());
+                if (isNumber && this.lastSearchResults.length > 0) {
+                    const selectedIndex = parseInt(userInput) - 1;
+                    if (selectedIndex >= 0 && selectedIndex < this.lastSearchResults.length) {
+                        const selectedFaq = this.lastSearchResults[selectedIndex];
+                        this.lastSearchResults = [];
+                        
+                        setTimeout(() => {
+                            window.copyToClipboard(selectedFaq.content);
+                        }, 100);
+                        
+                        if (selectedFaq.image && selectedFaq.image.trim() !== '') {
+                            return {
+                                content: selectedFaq.content,
+                                image: selectedFaq.image
+                            };
+                        }
+                        
+                        return selectedFaq.content;
+                    }
+                }
+
+                // 향상된 검색 알고리즘
+                const results = this.advancedSearch(userInput);
+
+                if (results.length === 0) {
+                    this.lastSearchResults = [];
+                    return `'${userInput}'에 대한 정보를 찾지 못했습니다.\n\n💡 다음과 같이 검색해보세요:\n• 키워드를 바꿔서 검색\n• 짧은 단어로 검색\n• 초성으로 검색 (예: ㄱㄱㅅㅇ)`;
+                } else if (results.length === 1) {
+                    this.lastSearchResults = [];
+                    
+                    setTimeout(() => {
+                        window.copyToClipboard(results[0].content);
+                    }, 100);
+                    
+                    if (results[0].image && results[0].image.trim() !== '') {
+                        return {
+                            content: results[0].content,
+                            image: results[0].image
+                        };
+                    }
+                    return results[0].content;
+                } else {
+                    this.lastSearchResults = results.slice(0, 6);
+                    
+                    let response = `🎯 '${userInput}' 관련 정보 ${results.length}개를 찾았습니다!\n\n`;
+                    this.lastSearchResults.forEach((item, index) => {
+                        response += `${index + 1}️⃣ ${item.title}`;
+                        if (item.score) {
+                            response += ` (관련도: ${Math.round(item.score)}%)`;
+                        }
+                        if (item.image && item.image.trim() !== '') {
+                            response += ` 📷`;
+                        }
+                        response += `\n`;
+                    });
+                    response += "\n💡 번호를 입력하시면 자세한 내용을 확인할 수 있습니다!";
+                    
+                    return response;
+                }
+            }
+
+            // 향상된 검색 메서드
+            advancedSearch(query) {
+                const normalizedQuery = query.toLowerCase().trim();
+                const results = [];
+                
+                for (const item of this.currentDB) {
+                    let maxScore = 0;
+                    
+                    // 제목과 키워드에서 각각 유사도 계산
+                    const titleScore = calculateSimilarity(normalizedQuery, item.title);
+                    const keywordScore = calculateSimilarity(normalizedQuery, item.keywords);
+                    const contentScore = calculateSimilarity(normalizedQuery, item.content) * 0.5; // 내용은 가중치 0.5
+                    
+                    maxScore = Math.max(titleScore, keywordScore, contentScore);
+                    
+                    // 부분 검색도 고려
+                    const queryParts = normalizedQuery.split(/\s+/);
+                    for (const part of queryParts) {
+                        if (part.length > 1) {
+                            maxScore = Math.max(maxScore, 
+                                calculateSimilarity(part, item.title),
+                                calculateSimilarity(part, item.keywords)
+                            );
+                        }
+                    }
+                    
+                    // 최소 점수 이상만 결과에 포함
+                    if (maxScore >= this.minSimilarityScore) {
+                        results.push({
+                            ...item,
+                            score: maxScore
+                        });
+                    }
+                }
+                
+                // 점수순으로 정렬 (내림차순)
+                results.sort((a, b) => b.score - a.score);
+                
+                return results;
+            }
+
+            clearSearchResults() {
+                this.lastSearchResults = [];
+            }
+        }
+
+        // 이미지 모달 함수들과 복사 기능
+        window.openImageModal = function(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'flex';
+            modalImg.src = imageSrc;
+        };
+
+        window.closeImageModal = function() {
+            document.getElementById('imageModal').style.display = 'none';
+        };
+
+        // 복사 관련 함수들
+        window.copyToClipboard = function(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyNotification();
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        };
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showCopyNotification();
+        }
+
+        function showCopyNotification() {
+            const notification = document.getElementById('copyNotification');
+            if (notification) {
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 1000);
+            }
+        }
+
+        // 전역 챗봇 인스턴스 생성
+        window.chatbot = new Chatbot();
+        
+        // 전역 함수들 설정
+        window.switchTab = (tab) => window.chatbot.switchTab(tab);
+        window.sendMessage = () => window.chatbot.sendMessage();
+        window.handleKeyPress = (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                window.chatbot.sendMessage();
+            }
+        };
+
+        // Google 로그인/로그아웃 전역 함수 추가
+        window.signInWithGoogle = async () => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log('로그인 성공:', user);
+            } catch (error) {
+                console.error('로그인 실패:', error);
+                alert('로그인에 실패했습니다. 다시 시도해주세요.');
+            }
+        };
+
+        window.signOut = async () => {
+            try {
+                await firebaseSignOut(auth);
+                console.log('로그아웃 완료');
+            } catch (error) {
+                console.error('로그아웃 실패:', error);
+            }
+        };
+    </script>
+</body>
+</html>
