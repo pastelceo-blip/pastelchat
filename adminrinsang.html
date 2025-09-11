@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새로운 챗봇 관리자 패널</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #8B4513 0%, #A0937D 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #FEFCF9;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .admin-header {
+            background: #8B4513;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .admin-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .login-section {
+            padding: 40px;
+            text-align: center;
+            display: block;
+        }
+        
+        .google-login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .admin-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #8B4513;
+            border-bottom-color: #8B4513;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #8B4513;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #6d3710;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .data-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+        
+        .data-item {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .data-item:last-child {
+            border-bottom: none;
+        }
+        
+        .data-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .data-info p {
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .data-keywords {
+            font-size: 0.85rem;
+            color: #8B4513;
+            background: rgba(139, 69, 19, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .data-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .status-message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* 이미지 미리보기 스타일 */
+        .image-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .image-preview img {
+            max-width: 200px;
+            max-height: 150px;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+            background: #f8f9fa;
+            border-radius: 50%;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .admin-container {
+                border-radius: 12px;
+                margin: 0;
+            }
+            
+            .admin-header {
+                padding: 20px;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .admin-content {
+                padding: 15px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .user-profile {
+                justify-content: center;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+                border-bottom: none;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                border-radius: 8px;
+                border: 2px solid transparent;
+                background: #f8f9fa;
+                color: #666;
+            }
+            
+            .tab-btn.active {
+                background: #8B4513;
+                color: white;
+                border-color: #8B4513;
+            }
+            
+            .form-section {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .form-section h3 {
+                font-size: 1.1rem;
+            }
+            
+            .data-item {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .data-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .modal-overlay {
+                padding: 10px;
+                align-items: flex-start;
+                padding-top: 20px;
+            }
+            
+            .modal-content {
+                max-height: 85vh;
+            }
+            
+            .modal-header,
+            .modal-body {
+                padding: 15px;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .modal-actions .btn {
+                width: 100%;
+            }
+            
+            /* 필터 버튼들 모바일에서 세로 배열 */
+            .form-section div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            
+            .form-section div[style*="display: flex"] .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .admin-header {
+                padding: 15px;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .admin-content {
+                padding: 10px;
+            }
+            
+            .form-section {
+                padding: 15px;
+            }
+            
+            .data-item {
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .btn-sm {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🤖 새로운 챗봇 관리자 패널</h1>
+            <p>새로운 챗봇 지식 베이스 관리 시스템</p>
+        </div>
+        
+        <!-- 로그인 섹션 -->
+        <div class="login-section" id="loginSection">
+            <h2 style="margin-bottom: 20px; color: #333;">관리자 인증이 필요합니다</h2>
+            <button class="google-login-btn" id="loginBtn">
+                Google로 관리자 로그인
+            </button>
+        </div>
+        
+        <!-- 관리자 컨텐츠 -->
+        <div class="admin-content" id="adminContent">
+            <div class="user-info">
+                <div class="user-profile">
+                    <img class="user-avatar" id="adminAvatar" alt="Admin Avatar">
+                    <div class="user-details">
+                        <h3 id="adminName"></h3>
+                        <p id="adminEmail"></p>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">로그아웃</button>
+            </div>
+            
+            <!-- 탭 네비게이션 -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="customer">고객지원 관리</button>
+                <button class="tab-btn" data-tab="business">업무지원 관리</button>
+                <button class="tab-btn" data-tab="list">전체 리스트</button>
+            </div>
+            
+            <!-- 고객지원 탭 -->
+            <div class="tab-content active" id="customerTab">
+                <div class="form-section">
+                    <h3>새 고객지원 정보 추가</h3>
+                    <form id="customerForm">
+                        <div class="form-group">
+                            <label>제목</label>
+                            <input type="text" id="customerTitle" placeholder="예: 새로운 서비스 이용방법" required>
+                        </div>
+                        <div class="form-group">
+                            <label>답변 내용</label>
+                            <textarea id="customerContent" placeholder="고객에게 제공할 답변을 입력하세요..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>키워드 (쉼표로 구분)</label>
+                            <input type="text" id="customerKeywords" placeholder="예: 서비스,이용방법,가이드,도움말" required>
+                        </div>
+                        <div class="form-group">
+                            <label>제외키워드 (쉼표로 구분)</label>
+                            <input type="text" id="customerException" placeholder="예: 무료,할인 (선택사항)">
+                        </div>
+                        <div class="form-group">
+                            <label>이미지 업로드 (선택사항) - 자동 압축됩니다</label>
+                            <input type="file" id="customerImage" accept="image/*" style="margin-bottom: 10px;">
+                            <div id="customerImagePreview" class="image-preview"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">추가하기</button>
+                    </form>
+                </div>
+                
+                <div class="status-message" id="customerStatus"></div>
+                
+                <div class="data-list" id="customerList">
+                    <!-- 고객지원 데이터가 여기에 표시됩니다 -->
+                </div>
+            </div>
+            
+            <!-- 업무지원 탭 -->
+            <div class="tab-content" id="businessTab">
+                <div class="form-section">
+                    <h3>새 업무지원 정보 추가</h3>
+                    <form id="businessForm">
+                        <div class="form-group">
+                            <label>제목</label>
+                            <input type="text" id="businessTitle" placeholder="예: 새로운 연락처 정보" required>
+                        </div>
+                        <div class="form-group">
+                            <label>답변 내용</label>
+                            <textarea id="businessContent" placeholder="업무 관련 정보를 입력하세요..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>키워드 (쉼표로 구분)</label>
+                            <input type="text" id="businessKeywords" placeholder="예: 연락처,전화번호,업무,문의" required>
+                        </div>
+                        <div class="form-group">
+                            <label>제외키워드 (쉼표로 구분)</label>
+                            <input type="text" id="businessException" placeholder="예: 개인정보,비밀 (선택사항)">
+                        </div>
+                        <div class="form-group">
+                            <label>이미지 업로드 (선택사항) - 자동 압축됩니다</label>
+                            <input type="file" id="businessImage" accept="image/*" style="margin-bottom: 10px;">
+                            <div id="businessImagePreview" class="image-preview"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">추가하기</button>
+                    </form>
+                </div>
+                
+                <div class="status-message" id="businessStatus"></div>
+                
+                <div class="data-list" id="businessList">
+                    <!-- 업무지원 데이터가 여기에 표시됩니다 -->
+                </div>
+            </div>
+            
+            <!-- 전체 리스트 탭 -->
+            <div class="tab-content" id="listTab">
+                <div class="form-section">
+                    <h3>전체 데이터 관리</h3>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn btn-primary" data-filter="all">전체 보기</button>
+                        <button class="btn" data-filter="customer" style="background: #6c757d; color: white;">고객지원만</button>
+                        <button class="btn" data-filter="business" style="background: #6c757d; color: white;">업무지원만</button>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="searchInput" placeholder="제목이나 키워드로 검색..." style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;">
+                    </div>
+                </div>
+                
+                <div class="data-list" id="allItemsList">
+                    <!-- 전체 데이터가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 수정 모달 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>항목 수정</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editItemId">
+                    <input type="hidden" id="editItemType">
+                    <input type="hidden" id="editCurrentImage">
+                    <div class="form-group">
+                        <label>제목</label>
+                        <input type="text" id="editTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>답변 내용</label>
+                        <textarea id="editContent" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>키워드 (쉼표로 구분)</label>
+                        <input type="text" id="editKeywords" required>
+                    </div>
+                    <div class="form-group">
+                        <label>제외키워드 (쉼표로 구분)</label>
+                        <input type="text" id="editException" placeholder="선택사항">
+                    </div>
+                    <div class="form-group">
+                        <label>이미지 업로드 (선택사항) - 자동 압축됩니다</label>
+                        <input type="file" id="editImage" accept="image/*" style="margin-bottom: 10px;">
+                        <div id="editImagePreview" class="image-preview"></div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" id="cancelBtn" style="background: #6c757d; color: white;">취소</button>
+                        <button type="submit" class="btn btn-primary">수정 완료</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase 설정
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAXr7parhL6wQuUzy4MPvVhV6-J53wzcA",
+            authDomain: "pastelmovie-cac7a.firebaseapp.com",
+            databaseURL: "https://pastelmovie-cac7a-default-rtdb.firebaseio.com",
+            projectId: "pastelmovie-cac7a",
+            storageBucket: "pastelmovie-cac7a.firebasestorage.app",
+            messagingSenderId: "543294016464",
+            appId: "1:543294016464:web:47162285ca02d3cfb587d5",
+            measurementId: "G-LK2Q13294B"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // 전역 변수
+        let customerData = [];
+        let businessData = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+        let uploadedImages = new Map();
+
+        // DOM 요소
+        const loginSection = document.getElementById('loginSection');
+        const adminContent = document.getElementById('adminContent');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const editModal = document.getElementById('editModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        // 초기화
+        function init() {
+            setupEventListeners();
+            onAuthStateChanged(auth, handleAuthChange);
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            loginBtn.addEventListener('click', signInWithGoogle);
+            logoutBtn.addEventListener('click', signOutUser);
+
+            // 탭 전환
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
+                });
+            }
+
+            // 폼 제출
+            document.getElementById('customerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addItem('customer');
+            });
+
+            document.getElementById('businessForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addItem('business');
+            });
+
+            // 수정 폼 제출
+            document.getElementById('editForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateItem();
+            });
+
+            // 모달 닫기
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            editModal.addEventListener('click', function(e) {
+                if (e.target === editModal) closeModal();
+            });
+
+            // 필터링 및 검색
+            const filterButtons = document.querySelectorAll('[data-filter]');
+            for (let i = 0; i < filterButtons.length; i++) {
+                filterButtons[i].addEventListener('click', function() {
+                    filterList(this.dataset.filter);
+                });
+            }
+
+            document.getElementById('searchInput').addEventListener('input', searchItems);
+
+            // 이미지 업로드
+            document.getElementById('customerImage').addEventListener('change', function(e) {
+                handleImageUpload(e, 'customer');
+            });
+            document.getElementById('businessImage').addEventListener('change', function(e) {
+                handleImageUpload(e, 'business');
+            });
+            
+            // 수정 모달 이미지 업로드
+            document.getElementById('editImage').addEventListener('change', function(e) {
+                handleImageUpload(e, 'edit');
+            });
+        }
+
+        // 로그인 함수
+        async function signInWithGoogle() {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error('로그인 실패:', error);
+                alert('로그인에 실패했습니다.');
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('로그아웃 실패:', error);
+            }
+        }
+
+        function handleAuthChange(user) {
+            if (user) {
+                showAdminPanel(user);
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            loginSection.style.display = 'block';
+            adminContent.style.display = 'none';
+        }
+
+        function showAdminPanel(user) {
+            loginSection.style.display = 'none';
+            adminContent.style.display = 'block';
+            
+            document.getElementById('adminName').textContent = user.displayName || '관리자';
+            document.getElementById('adminEmail').textContent = user.email;
+            document.getElementById('adminAvatar').src = user.photoURL || 'https://via.placeholder.com/50';
+            
+            loadData();
+        }
+
+        // 데이터 로딩 - 새로운 컬렉션 사용
+        async function loadData() {
+            try {
+                // 새로운 컬렉션 'new_chatbot_faqs' 사용
+                const customerDoc = await getDoc(doc(db, 'new_chatbot_faqs', 'customer'));
+                const businessDoc = await getDoc(doc(db, 'new_chatbot_faqs', 'business'));
+                
+                customerData = customerDoc.exists() ? (customerDoc.data().items || []) : [];
+                businessData = businessDoc.exists() ? (businessDoc.data().items || []) : [];
+                
+                console.log('새로운 챗봇 데이터 로드 완료');
+                console.log('고객지원 데이터:', customerData);
+                console.log('업무지원 데이터:', businessData);
+                
+                renderData();
+            } catch (error) {
+                console.error('데이터 로딩 실패:', error);
+                alert('데이터 로딩에 실패했습니다: ' + error.message);
+            }
+        }
+
+        // 이미지 압축 함수 (크기는 원본 유지, 품질만 압축)
+        function compressImage(file, quality = 0.8) {
+            return new Promise(function(resolve, reject) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    // 원본 크기 그대로 사용
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // 이미지 그리기
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    
+                    // Base64로 변환 (JPEG 품질 조절)
+                    try {
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                        
+                        // 압축된 크기 확인
+                        const compressedSize = compressedDataUrl.length;
+                        const maxSize = 500 * 1024; // 500KB Base64 제한
+                        
+                        if (compressedSize > maxSize) {
+                            // 더 압축이 필요한 경우 품질을 낮춤
+                            const newQuality = Math.max(0.3, quality * (maxSize / compressedSize));
+                            console.log('추가 압축 필요, 품질 조정:', quality, '->', newQuality);
+                            
+                            const finalDataUrl = canvas.toDataURL('image/jpeg', newQuality);
+                            resolve(finalDataUrl);
+                        } else {
+                            resolve(compressedDataUrl);
+                        }
+                    } catch (error) {
+                        reject(new Error('이미지 압축 실패: ' + error.message));
+                    }
+                };
+                
+                img.onerror = function() {
+                    reject(new Error('이미지 로드 실패'));
+                };
+                
+                // 파일을 이미지로 로드
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    reject(new Error('파일 읽기 실패'));
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 이미지를 압축하여 Base64로 변환하는 방식
+        async function handleImageUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log('파일 선택됨:', file.name, file.size, file.type);
+
+            if (file.type.indexOf('image/') !== 0) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                event.target.value = '';
+                return;
+            }
+
+            const previewContainer = document.getElementById(type + 'ImagePreview');
+            previewContainer.innerHTML = '<p style="color: #8B4513;">이미지 압축 중...</p>';
+
+            try {
+                // 이미지 압축
+                const compressedBase64 = await compressImage(file);
+                console.log('압축 완료, 원본:', file.size, '압축 후 크기:', compressedBase64.length);
+                
+                // 미리보기 표시
+                showImagePreview(compressedBase64, type, file.name);
+                
+                // Base64 데이터 저장
+                uploadedImages.set(type + 'Image', {
+                    url: compressedBase64,
+                    fileName: file.name,
+                    isBase64: true
+                });
+                
+                console.log('이미지 처리 완료');
+
+            } catch (error) {
+                console.error('이미지 처리 실패:', error);
+                alert('이미지 처리에 실패했습니다: ' + error.message);
+                previewContainer.innerHTML = '<p style="color: #dc3545;">처리 실패</p>';
+                event.target.value = '';
+            }
+        }
+
+        function showImagePreview(imageData, type, fileName) {
+            const previewContainer = document.getElementById(type + 'ImagePreview');
+            
+            // Base64 데이터인지 URL인지 확인
+            const isBase64 = imageData.indexOf('data:') === 0;
+            
+            // 압축된 크기 계산 (대략적)
+            const sizeKB = isBase64 ? Math.round(imageData.length * 0.75 / 1024) : 0;
+            
+            previewContainer.innerHTML = 
+                '<div style="text-align: center;">' +
+                '<img src="' + imageData + '" alt="미리보기" style="max-width: 200px; max-height: 150px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; this.nextSibling.style.display=\'block\';">' +
+                '<p style="display: none; color: #dc3545;">이미지 로드 실패</p>' +
+                '<br><button type="button" class="remove-image" onclick="removeImage(\'' + type + '\', \'' + fileName + '\')" style="display: block; margin: 10px auto 0; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">이미지 제거</button>' +
+                (isBase64 ? '<p style="font-size: 0.7rem; color: #666; margin-top: 5px;">✅ 자동 압축 완료 (약 ' + sizeKB + 'KB)</p>' : '') +
+                '</div>';
+        }
+
+        async function removeImage(type, fileName) {
+            if (!confirm('이미지를 삭제하시겠습니까?')) return;
+
+            try {
+                // Base64 방식에서는 별도 Storage 삭제 불필요
+                document.getElementById(type + 'ImagePreview').innerHTML = '';
+                document.getElementById(type + 'Image').value = '';
+                uploadedImages.delete(type + 'Image');
+                
+                console.log('이미지 제거 완료:', fileName);
+
+            } catch (error) {
+                console.error('이미지 제거 실패:', error);
+                
+                // UI는 정리
+                document.getElementById(type + 'ImagePreview').innerHTML = '';
+                document.getElementById(type + 'Image').value = '';
+                uploadedImages.delete(type + 'Image');
+            }
+        }
+
+        // 항목 추가 - 새로운 컬렉션에 저장
+        async function addItem(type) {
+            const title = document.getElementById(type + 'Title').value;
+            const content = document.getElementById(type + 'Content').value;
+            const keywords = document.getElementById(type + 'Keywords').value;
+            const exception = document.getElementById(type + 'Exception').value;
+            
+            const imageData = uploadedImages.get(type + 'Image');
+            const imageUrl = imageData ? imageData.url : '';
+
+            const newItem = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                keywords: keywords,
+                exception: exception,
+                image: imageUrl,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                if (type === 'customer') {
+                    customerData.push(newItem);
+                    // 새로운 컬렉션에 저장
+                    await setDoc(doc(db, 'new_chatbot_faqs', 'customer'), { items: customerData });
+                } else {
+                    businessData.push(newItem);
+                    // 새로운 컬렉션에 저장
+                    await setDoc(doc(db, 'new_chatbot_faqs', 'business'), { items: businessData });
+                }
+
+                showStatus((type === 'customer' ? '고객지원' : '업무지원') + ' 항목이 추가되었습니다.', 'success', type);
+                clearForm(type);
+                renderData();
+            } catch (error) {
+                console.error('항목 추가 실패:', error);
+                showStatus('항목 추가에 실패했습니다.', 'error', type);
+            }
+        }
+
+        // 항목 수정
+        function editItem(type, id) {
+            const data = type === 'customer' ? customerData : businessData;
+            let item = null;
+            
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].id == id) {
+                    item = data[i];
+                    break;
+                }
+            }
+            
+            if (!item) return;
+            
+            document.getElementById('editItemId').value = id;
+            document.getElementById('editItemType').value = type;
+            document.getElementById('editTitle').value = item.title;
+            document.getElementById('editContent').value = item.content;
+            document.getElementById('editKeywords').value = item.keywords;
+            document.getElementById('editException').value = item.exception || '';
+            document.getElementById('editCurrentImage').value = item.image || '';
+            
+            // 기존 이미지 미리보기 표시
+            const previewContainer = document.getElementById('editImagePreview');
+            if (item.image) {
+                previewContainer.innerHTML = 
+                    '<img src="' + item.image + '" alt="현재 이미지">' +
+                    '<button type="button" class="remove-image" onclick="removeCurrentImage()">현재 이미지 제거</button>';
+            } else {
+                previewContainer.innerHTML = '';
+            }
+            
+            editModal.style.display = 'flex';
+        }
+
+        // 현재 이미지 제거 (수정 모달에서)
+        function removeCurrentImage() {
+            if (!confirm('현재 이미지를 제거하시겠습니까?')) return;
+            
+            document.getElementById('editCurrentImage').value = '';
+            document.getElementById('editImagePreview').innerHTML = '';
+        }
+
+        // 항목 업데이트 - 새로운 컬렉션에 저장
+        async function updateItem() {
+            const id = parseInt(document.getElementById('editItemId').value);
+            const type = document.getElementById('editItemType').value;
+            const title = document.getElementById('editTitle').value;
+            const content = document.getElementById('editContent').value;
+            const keywords = document.getElementById('editKeywords').value;
+            const exception = document.getElementById('editException').value;
+            
+            // 이미지 URL 결정 (새로 업로드된 이미지 우선)
+            const newImageData = uploadedImages.get('editImage');
+            const currentImage = document.getElementById('editCurrentImage').value;
+            const imageUrl = newImageData ? newImageData.url : currentImage;
+
+            const data = type === 'customer' ? customerData : businessData;
+            let itemIndex = -1;
+            
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].id == id) {
+                    itemIndex = i;
+                    break;
+                }
+            }
+            
+            if (itemIndex === -1) return;
+
+            // 수동으로 객체 업데이트
+            data[itemIndex].title = title;
+            data[itemIndex].content = content;
+            data[itemIndex].keywords = keywords;
+            data[itemIndex].exception = exception;
+            data[itemIndex].image = imageUrl;
+            data[itemIndex].updatedAt = new Date().toISOString();
+
+            try {
+                // 새로운 컬렉션에 저장
+                await setDoc(doc(db, 'new_chatbot_faqs', type), { items: data });
+
+                // 업로드된 이미지 정보 초기화
+                uploadedImages.delete('editImage');
+
+                closeModal();
+                showStatus('항목이 수정되었습니다.', 'success', 'customer');
+                renderData();
+            } catch (error) {
+                console.error('항목 수정 실패:', error);
+                showStatus('항목 수정에 실패했습니다.', 'error', 'customer');
+            }
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            editModal.style.display = 'none';
+            document.getElementById('editImage').value = '';
+            document.getElementById('editImagePreview').innerHTML = '';
+            uploadedImages.delete('editImage');
+        }
+        
+        // 항목 삭제 - 새로운 컬렉션에서 삭제
+        async function deleteItem(type, id) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            
+            try {
+                if (type === 'customer') {
+                    customerData = customerData.filter(function(item) {
+                        return item.id != id;
+                    });
+                    // 새로운 컬렉션에 저장
+                    await setDoc(doc(db, 'new_chatbot_faqs', 'customer'), { items: customerData });
+                } else {
+                    businessData = businessData.filter(function(item) {
+                        return item.id != id;
+                    });
+                    // 새로운 컬렉션에 저장
+                    await setDoc(doc(db, 'new_chatbot_faqs', 'business'), { items: businessData });
+                }
+
+                showStatus('항목이 삭제되었습니다.', 'success', 'customer');
+                renderData();
+                
+            } catch (error) {
+                console.error('항목 삭제 실패:', error);
+                alert('삭제에 실패했습니다.');
+            }
+        }
+
+        // 탭 전환
+        function switchTab(tab) {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            const tabContents = document.querySelectorAll('.tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            if (tab === 'list') {
+                renderAllItems();
+            }
+        }
+
+        // 필터링
+        function filterList(filter) {
+            currentFilter = filter;
+            
+            const filterButtons = document.querySelectorAll('[data-filter]');
+            for (let i = 0; i < filterButtons.length; i++) {
+                filterButtons[i].style.background = '#6c757d';
+                filterButtons[i].style.color = 'white';
+            }
+            
+            document.querySelector('[data-filter="' + filter + '"]').style.background = '#8B4513';
+            renderAllItems();
+        }
+
+        // 검색
+        function searchItems() {
+            searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            renderAllItems();
+        }
+
+        // 데이터 렌더링
+        function renderData() {
+            renderCustomerData();
+            renderBusinessData();
+            renderAllItems();
+        }
+
+        function renderCustomerData() {
+            const container = document.getElementById('customerList');
+            if (customerData.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">등록된 고객지원 항목이 없습니다.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < customerData.length; i++) {
+                const item = customerData[i];
+                console.log('렌더링할 고객지원 아이템:', item);
+                
+                let imageHtml = '';
+                if (item.image && item.image.trim() !== '') {
+                    imageHtml = '<div style="margin-bottom: 10px;"><img src="' + item.image + '" alt="이미지" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; console.error(\'이미지 로드 실패:\', this.src);"></div>';
+                }
+                
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ' + item.exception + '</span>' : '';
+                
+                html += '<div class="data-item">' +
+                    '<div class="data-info">' +
+                        imageHtml +
+                        '<h4>' + item.title + '</h4>' +
+                        '<p>' + item.content + '</p>' +
+                        '<span class="data-keywords">키워드: ' + item.keywords + '</span>' +
+                        exceptionHtml +
+                    '</div>' +
+                    '<div class="data-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="editItem(\'customer\', ' + item.id + ')">수정</button>' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'customer\', ' + item.id + ')">삭제</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function renderBusinessData() {
+            const container = document.getElementById('businessList');
+            if (businessData.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">등록된 업무지원 항목이 없습니다.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < businessData.length; i++) {
+                const item = businessData[i];
+                console.log('렌더링할 업무지원 아이템:', item);
+                
+                let imageHtml = '';
+                if (item.image && item.image.trim() !== '') {
+                    imageHtml = '<div style="margin-bottom: 10px;"><img src="' + item.image + '" alt="이미지" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display=\'none\'; console.error(\'이미지 로드 실패:\', this.src);"></div>';
+                }
+                
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ' + item.exception + '</span>' : '';
+                
+                html += '<div class="data-item">' +
+                    '<div class="data-info">' +
+                        imageHtml +
+                        '<h4>' + item.title + '</h4>' +
+                        '<p>' + item.content + '</p>' +
+                        '<span class="data-keywords">키워드: ' + item.keywords + '</span>' +
+                        exceptionHtml +
+                    '</div>' +
+                    '<div class="data-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="editItem(\'business\', ' + item.id + ')">수정</button>' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'business\', ' + item.id + ')">삭제</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function renderAllItems() {
+            const container = document.getElementById('allItemsList');
+            let allItems = [];
+
+            // 데이터 수집
+            if (currentFilter === 'all' || currentFilter === 'customer') {
+                for (let i = 0; i < customerData.length; i++) {
+                    const item = {};
+                    for (let key in customerData[i]) {
+                        item[key] = customerData[i][key];
+                    }
+                    item.type = 'customer';
+                    allItems.push(item);
+                }
+            }
+            
+            if (currentFilter === 'all' || currentFilter === 'business') {
+                for (let i = 0; i < businessData.length; i++) {
+                    const item = {};
+                    for (let key in businessData[i]) {
+                        item[key] = businessData[i][key];
+                    }
+                    item.type = 'business';
+                    allItems.push(item);
+                }
+            }
+
+            // 검색 필터링
+            if (searchTerm) {
+                const filteredItems = [];
+                for (let i = 0; i < allItems.length; i++) {
+                    const item = allItems[i];
+                    if (item.title.toLowerCase().indexOf(searchTerm) !== -1 || 
+                        item.keywords.toLowerCase().indexOf(searchTerm) !== -1 ||
+                        item.content.toLowerCase().indexOf(searchTerm) !== -1) {
+                        filteredItems.push(item);
+                    }
+                }
+                allItems = filteredItems;
+            }
+
+            if (allItems.length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">조건에 맞는 항목이 없습니다.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < allItems.length; i++) {
+                const item = allItems[i];
+                const imageHtml = item.image ? '<br><img src="' + item.image + '" style="width: 100%; max-width: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; margin: 10px 0;">' : '';
+                const exceptionHtml = item.exception ? '<br><span class="data-keywords" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; margin-top: 5px; display: inline-block;">제외키워드: ' + item.exception + '</span>' : '';
+                const dateHtml = item.createdAt ? '<div style="font-size: 0.8rem; color: #999; margin-top: 8px;">생성: ' + new Date(item.createdAt).toLocaleString() + '</div>' : '';
+                
+                html += '<div class="data-item">' +
+                    '<div class="data-info">' +
+                        '<span style="background: ' + (item.type === 'customer' ? '#e3f2fd' : '#f3e5f5') + '; color: ' + (item.type === 'customer' ? '#1976d2' : '#7b1fa2') + '; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-bottom: 8px; display: inline-block;">' +
+                            (item.type === 'customer' ? '고객지원' : '업무지원') +
+                        '</span>' +
+                        imageHtml +
+                        '<h4>' + item.title + '</h4>' +
+                        '<p>' + item.content + '</p>' +
+                        '<span class="data-keywords">키워드: ' + item.keywords + '</span>' +
+                        exceptionHtml +
+                        dateHtml +
+                    '</div>' +
+                    '<div class="data-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="editItem(\'' + item.type + '\', ' + item.id + ')">수정</button>' +
+                        '<button class="btn btn-danger btn-sm" onclick="deleteItem(\'' + item.type + '\', ' + item.id + ')">삭제</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        // 상태 메시지
+        function showStatus(message, type, tab) {
+            const statusEl = document.getElementById(tab + 'Status');
+            if (statusEl) {
+                statusEl.className = 'status-message status-' + type;
+                statusEl.textContent = message;
+                statusEl.style.display = 'block';
+                
+                setTimeout(function() {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 폼 초기화
+        function clearForm(type) {
+            document.getElementById(type + 'Title').value = '';
+            document.getElementById(type + 'Content').value = '';
+            document.getElementById(type + 'Keywords').value = '';
+            document.getElementById(type + 'Exception').value = '';
+            document.getElementById(type + 'Image').value = '';
+            document.getElementById(type + 'ImagePreview').innerHTML = '';
+            uploadedImages.delete(type + 'Image');
+        }
+
+        // 전역 함수 노출
+        window.editItem = editItem;
+        window.deleteItem = deleteItem;
+        window.removeImage = removeImage;
+        window.removeCurrentImage = removeCurrentImage;
+
+        // 초기화 실행
+        init();
+    </script>
+</body>
+</html>
